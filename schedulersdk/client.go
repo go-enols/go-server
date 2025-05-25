@@ -41,7 +41,6 @@ type ResultResponse struct {
 	TaskID string          `json:"taskId"`
 	Status string          `json:"status"`
 	Result json.RawMessage `json:"result"`
-	Error  string          `json:"error,omitempty"`
 }
 
 // 执行任务
@@ -99,6 +98,8 @@ func (c *Client) GetResult(taskID string) (*ResultResponse, error) {
 	case "pending", "processing":
 		time.Sleep(1 * time.Second)
 		return c.GetResult(taskID)
+	case "error":
+		return nil, errors.New(string(response.Result))
 	}
 	return &response, nil
 }
@@ -116,14 +117,14 @@ func (c *Client) ExecuteSync(method string, params interface{}, timeout time.Dur
 	for time.Since(start) < timeout {
 		resultResp, err := c.GetResult(execResp.TaskID)
 		if err != nil {
-			return nil, fmt.Errorf("get result failed: %w", err)
+			return nil, err
 		}
 
 		switch resultResp.Status {
 		case "done":
 			return resultResp, nil
 		case "error":
-			return nil, errors.New(resultResp.Error)
+			return nil, errors.New(string(resultResp.Result))
 			// "pending" 或 "processing" 状态继续等待
 		}
 

@@ -14,7 +14,7 @@ func main() {
 		WorkerID:     "math-worker-1",
 		WorkerGroup:  "math",
 		MaxRetry:     5,
-		PingInterval: 20,
+		PingInterval: 5,
 	}
 
 	// 2. 创建Worker实例

@@ -15,7 +15,7 @@ type Task struct {
 	ID      string
 	Method  string
 	Params  json.RawMessage
-	Result  json.RawMessage
+	Result  any
 	Status  string // "pending", "processing", "done", "error"
 	Worker  *Worker
 	Created time.Time
@@ -131,7 +131,7 @@ func (s *Scheduler) handleWorkerConnection(w http.ResponseWriter, r *http.Reques
 				if task, exists := s.tasks[msg.TaskID]; exists {
 					if msg.Error != "" {
 						task.Status = "error"
-						task.Result = json.RawMessage(`{"error":"` + msg.Error + `"}`)
+						task.Result = msg.Error
 					} else {
 						task.Status = "done"
 						task.Result = msg.Result
@@ -183,7 +183,7 @@ func (s *Scheduler) handleExecute(w http.ResponseWriter, r *http.Request) {
 
 	if selectedWorker == nil {
 		task.Status = "error"
-		task.Result = json.RawMessage(`{"error":"no available worker for method"}`)
+		task.Result = "服务不可用"
 	} else {
 		task.Worker = selectedWorker
 		task.Status = "processing"
@@ -194,7 +194,7 @@ func (s *Scheduler) handleExecute(w http.ResponseWriter, r *http.Request) {
 			"params": task.Params,
 		}); err != nil {
 			task.Status = "error"
-			task.Result = json.RawMessage(`{"error":"failed to assign task"}`)
+			task.Result = err.Error()
 		}
 	}
 

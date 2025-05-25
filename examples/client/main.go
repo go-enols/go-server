@@ -3,8 +3,9 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"time"
+
+	"github.com/go-enols/go-log"
 
 	"github.com/go-enols/go-server/schedulersdk" // 替换为你的实际模块路径
 )
@@ -32,7 +33,8 @@ func asyncExample(client *schedulersdk.Client) {
 		"b": 3.8,
 	})
 	if err != nil {
-		log.Fatalf("执行失败: %v", err)
+		log.Errorf("执行失败: %v", err)
+		return
 	}
 
 	fmt.Printf("任务已提交: ID=%s, 状态=%s\n", resp.TaskID, resp.Status)
@@ -41,21 +43,16 @@ func asyncExample(client *schedulersdk.Client) {
 	for {
 		result, err := client.GetResult(resp.TaskID)
 		if err != nil {
-			log.Fatalf("获取结果失败: %v", err)
+			log.Errorf("执行失败: %v", err)
+			return
 		}
 
 		fmt.Printf("轮询结果: 状态=%s", result.Status)
-		if result.Status == "done" {
-			var sum struct {
-				Result float64 `json:"result"`
-			}
-			json.Unmarshal(result.Result, &sum)
-			fmt.Printf(", 结果=%.2f\n", sum.Result)
-			break
-		} else if result.Status == "error" {
-			fmt.Printf(", 错误=%s\n", result.Error)
-			break
+		var sum struct {
+			Result float64 `json:"result"`
 		}
+		json.Unmarshal(result.Result, &sum)
+		fmt.Printf(", 结果=%.2f\n", sum.Result)
 		fmt.Println()
 
 		time.Sleep(1 * time.Second)
@@ -71,7 +68,8 @@ func syncExample(client *schedulersdk.Client) {
 		"b": 7,
 	}, 10*time.Second)
 	if err != nil {
-		log.Fatalf("同步执行失败: %v", err)
+		log.Errorf("执行失败: %v", err)
+		return
 	}
 
 	var product struct {
