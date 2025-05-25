@@ -40,23 +40,19 @@ func asyncExample(client *schedulersdk.Client) {
 	fmt.Printf("任务已提交: ID=%s, 状态=%s\n", resp.TaskID, resp.Status)
 
 	// 轮询结果
-	for {
-		result, err := client.GetResult(resp.TaskID)
-		if err != nil {
-			log.Errorf("执行失败: %v", err)
-			return
-		}
-
-		fmt.Printf("轮询结果: 状态=%s", result.Status)
-		var sum struct {
-			Result float64 `json:"result"`
-		}
-		json.Unmarshal(result.Result, &sum)
-		fmt.Printf(", 结果=%.2f\n", sum.Result)
-		fmt.Println()
-
-		time.Sleep(1 * time.Second)
+	result, err := client.GetResult(resp.TaskID)
+	if err != nil {
+		log.Errorf("执行失败: %v", err)
+		return
 	}
+
+	fmt.Printf("轮询结果: 状态=%s", result.Status)
+	var sum struct {
+		Result float64 `json:"result"`
+	}
+	json.Unmarshal(result.Result, &sum)
+	fmt.Printf(", 结果=%.2f\n", sum.Result)
+	fmt.Println()
 }
 
 func syncExample(client *schedulersdk.Client) {
