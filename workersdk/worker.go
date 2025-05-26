@@ -14,7 +14,6 @@ import (
 // Worker 配置
 type Config struct {
 	SchedulerURL string // 调度器地址
-	WorkerID     string // Worker唯一ID
 	WorkerGroup  string // Worker分组
 	MaxRetry     int    // 连接重试次数
 	PingInterval int    // 心跳间隔(秒)
@@ -74,7 +73,7 @@ func (w *Worker) Start() error {
 	go w.keepAlive()
 	go w.processTasks()
 
-	log.Printf("Worker %s started", w.config.WorkerID)
+	log.Printf("Worker %s started", w.config.WorkerGroup)
 	return nil
 }
 
@@ -91,7 +90,6 @@ func (w *Worker) connect() error {
 		if err == nil {
 			// 发送注册信息
 			registration := map[string]interface{}{
-				"id":      w.config.WorkerID,
 				"group":   w.config.WorkerGroup,
 				"methods": w.getMethodNames(),
 			}

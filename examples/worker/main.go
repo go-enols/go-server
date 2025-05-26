@@ -11,7 +11,6 @@ func main() {
 	// 1. 创建Worker配置
 	config := workersdk.Config{
 		SchedulerURL: "ws://localhost:8080/api/worker/connect",
-		WorkerID:     "math-worker-1",
 		WorkerGroup:  "math",
 		MaxRetry:     5,
 		PingInterval: 5,

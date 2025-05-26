@@ -3,6 +3,7 @@ package goserver
 import (
 	"encoding/json"
 	"log"
+	"math"
 	"net/http"
 	"sync"
 	"time"
@@ -26,6 +27,7 @@ type Worker struct {
 	Conn     *websocket.Conn
 	Methods  []string
 	LastPing time.Time
+	Count    int
 }
 
 type Scheduler struct {
@@ -62,11 +64,14 @@ func (s *Scheduler) handleWorkerConnection(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	reg.ID = uuid.NewString()
+
 	worker := &Worker{
 		ID:       reg.ID,
 		Conn:     conn,
 		Methods:  reg.Methods,
 		LastPing: time.Now(),
+		Count:    0,
 	}
 
 	s.mu.Lock()
@@ -165,17 +170,19 @@ func (s *Scheduler) handleExecute(w http.ResponseWriter, r *http.Request) {
 	s.tasks[task.ID] = task
 	s.mu.Unlock()
 
+	var selectedWorker *Worker
+	var oldCount int = math.MaxInt
 	// 查找可用Worker
 	s.mu.RLock()
-	var selectedWorker *Worker
 	for _, worker := range s.workers {
 		for _, method := range worker.Methods {
 			if method == req.Method {
-				selectedWorker = worker
-				break
+				if worker.Count < oldCount {
+					selectedWorker = worker
+				}
 			}
 		}
-		if selectedWorker != nil {
+		if oldCount == 0 {
 			break
 		}
 	}
