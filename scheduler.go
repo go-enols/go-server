@@ -192,6 +192,9 @@ func (s *Scheduler) handleExecute(w http.ResponseWriter, r *http.Request) {
 		task.Status = "error"
 		task.Result = "服务不可用"
 	} else {
+		defer func() {
+			selectedWorker.Count--
+		}()
 		task.Worker = selectedWorker
 		task.Status = "processing"
 		if err := selectedWorker.Conn.WriteJSON(map[string]interface{}{
