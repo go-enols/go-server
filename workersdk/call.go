@@ -25,8 +25,17 @@ func Call(host, method string, params interface{}, out interface{}) error {
 	if res.Status == "error" {
 		return errors.New(string(res.Result))
 	}
+	// 轮询结果
+	result, err := client.GetResult(res.TaskID)
+	if err != nil {
+		return err
+	}
+
+	if result.Status == "error" {
+		return errors.New(string(result.Result))
+	}
 	if out != nil {
-		return json.Unmarshal(res.Result, out)
+		return json.Unmarshal(result.Result, out)
 	}
 	return nil
 }
