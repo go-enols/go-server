@@ -158,8 +158,17 @@ func (w *Worker) processTasks() {
 			continue
 		}
 
-		if msg.Type == "task" {
+		switch msg.Type {
+		case "task":
 			go w.handleTask(msg.TaskID, msg.Method, msg.Params)
+		case "ping": // 添加对 ping 消息的处理
+			w.connMutex.Lock()
+			pongMsg := map[string]string{"type": "pong"}
+			if err := conn.WriteJSON(pongMsg); err != nil {
+				log.Printf("Failed to send pong to scheduler: %v", err)
+				// 可以在这里添加错误处理逻辑，例如尝试关闭并重新连接
+			}
+			w.connMutex.Unlock()
 		}
 	}
 }
