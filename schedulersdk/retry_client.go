@@ -19,7 +19,7 @@ func NewRetryClient(baseURL string, maxRetries int, retryDelay time.Duration) *R
 	}
 }
 
-func (c *RetryClient) ExecuteWithRetry(method string, params interface{}) (*ExecuteResponse, error) {
+func (c *RetryClient) ExecuteWithRetry(method string, params interface{}) (*ResultResponse, error) {
 	var lastErr error
 	for i := 0; i < c.maxRetries; i++ {
 		resp, err := c.Execute(method, params)

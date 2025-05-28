@@ -30,12 +30,6 @@ type ExecuteRequest struct {
 	Params interface{} `json:"params"`
 }
 
-// 任务执行响应
-type ExecuteResponse struct {
-	TaskID string `json:"taskId"`
-	Status string `json:"status"`
-}
-
 // 任务结果响应
 type ResultResponse struct {
 	TaskID string          `json:"taskId"`
@@ -44,7 +38,7 @@ type ResultResponse struct {
 }
 
 // 执行任务
-func (c *Client) Execute(method string, params interface{}) (*ExecuteResponse, error) {
+func (c *Client) Execute(method string, params interface{}) (*ResultResponse, error) {
 	requestBody, err := json.Marshal(ExecuteRequest{
 		Method: method,
 		Params: params,
@@ -68,7 +62,7 @@ func (c *Client) Execute(method string, params interface{}) (*ExecuteResponse, e
 		return nil, fmt.Errorf("unexpected status %d: %s", resp.StatusCode, string(body))
 	}
 
-	var response ExecuteResponse
+	var response ResultResponse
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
 		return nil, fmt.Errorf("decode response failed: %w", err)
 	}
