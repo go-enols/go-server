@@ -163,12 +163,22 @@ func (w *Worker) processTasks() {
 			go w.handleTask(msg.TaskID, msg.Method, msg.Params)
 		case "ping": // 添加对 ping 消息的处理
 			w.connMutex.Lock()
-			pongMsg := map[string]string{"type": "pong"}
-			if err := conn.WriteJSON(pongMsg); err != nil {
-				log.Printf("Failed to send pong to scheduler: %v", err)
-				// 可以在这里添加错误处理逻辑，例如尝试关闭并重新连接
-			}
+			currentConn := w.conn
 			w.connMutex.Unlock()
+
+			if currentConn != nil {
+				pongMsg := map[string]string{"type": "pong"}
+				if err := currentConn.WriteJSON(pongMsg); err != nil {
+					log.Printf("Failed to send pong to scheduler: %v", err)
+					// 连接出错时关闭连接
+					w.connMutex.Lock()
+					if w.conn != nil {
+						w.conn.Close()
+						w.conn = nil
+					}
+					w.connMutex.Unlock()
+				}
+			}
 		}
 	}
 }
@@ -201,10 +211,23 @@ func (w *Worker) keepAlive() {
 	for {
 		select {
 		case <-ticker.C:
-			if err := w.conn.WriteJSON(map[string]string{"type": "ping"}); err != nil {
+			w.connMutex.Lock()
+			conn := w.conn
+			w.connMutex.Unlock()
+
+			if conn == nil {
+				continue
+			}
+
+			if err := conn.WriteJSON(map[string]string{"type": "ping"}); err != nil {
 				log.Printf("Ping failed: %v", err)
-				w.Stop()
-				return
+				// 不要直接调用Stop，而是关闭连接让processTasks处理重连
+				w.connMutex.Lock()
+				if w.conn != nil {
+					w.conn.Close()
+					w.conn = nil
+				}
+				w.connMutex.Unlock()
 			}
 		case <-w.stopChan:
 			return
@@ -241,8 +264,24 @@ func (w *Worker) sendResult(taskID string, result interface{}, err error) {
 		response["result"] = result
 	}
 
-	if err := w.conn.WriteJSON(response); err != nil {
+	w.connMutex.Lock()
+	conn := w.conn
+	w.connMutex.Unlock()
+
+	if conn == nil {
+		log.Printf("Cannot send result for task %s: connection is nil", taskID)
+		return
+	}
+
+	if err := conn.WriteJSON(response); err != nil {
 		log.Printf("Failed to send result for task %s: %v", taskID, err)
+		// 连接出错时关闭连接
+		w.connMutex.Lock()
+		if w.conn != nil {
+			w.conn.Close()
+			w.conn = nil
+		}
+		w.connMutex.Unlock()
 	}
 }
 

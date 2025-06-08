@@ -91,6 +91,14 @@ func (s *Scheduler) handleWorkerConnection(w http.ResponseWriter, r *http.Reques
 			case <-ticker.C:
 				s.mu.Lock()
 				if time.Since(worker.LastPing) > 45*time.Second {
+					// 处理该worker正在执行的任务
+					for _, task := range s.tasks {
+						if task.Worker != nil && task.Worker.ID == worker.ID && task.Status == "processing" {
+							task.Status = "error"
+							task.Result = "Worker timeout during task execution"
+							log.Printf("Task %s failed due to worker %s timeout", task.ID, worker.ID)
+						}
+					}
 					delete(s.workers, worker.ID)
 					s.mu.Unlock()
 					log.Printf("Worker timeout: %s", worker.ID)
@@ -100,6 +108,14 @@ func (s *Scheduler) handleWorkerConnection(w http.ResponseWriter, r *http.Reques
 
 				if err := conn.WriteJSON(map[string]string{"type": "ping"}); err != nil {
 					s.mu.Lock()
+					// 处理该worker正在执行的任务
+					for _, task := range s.tasks {
+						if task.Worker != nil && task.Worker.ID == worker.ID && task.Status == "processing" {
+							task.Status = "error"
+							task.Result = "Worker disconnected during task execution"
+							log.Printf("Task %s failed due to worker %s ping failure", task.ID, worker.ID)
+						}
+					}
 					delete(s.workers, worker.ID)
 					s.mu.Unlock()
 					log.Printf("Worker disconnected: %s", worker.ID)
@@ -120,6 +136,14 @@ func (s *Scheduler) handleWorkerConnection(w http.ResponseWriter, r *http.Reques
 			}
 			if err := conn.ReadJSON(&msg); err != nil {
 				s.mu.Lock()
+				// 处理该worker正在执行的任务
+				for _, task := range s.tasks {
+					if task.Worker != nil && task.Worker.ID == worker.ID && task.Status == "processing" {
+						task.Status = "error"
+						task.Result = "Worker disconnected during task execution"
+						log.Printf("Task %s failed due to worker %s disconnection", task.ID, worker.ID)
+					}
+				}
 				delete(s.workers, worker.ID)
 				s.mu.Unlock()
 				log.Printf("Worker %s disconnected: %v", worker.ID, err)
@@ -140,6 +164,10 @@ func (s *Scheduler) handleWorkerConnection(w http.ResponseWriter, r *http.Reques
 					} else {
 						task.Status = "done"
 						task.Result = msg.Result
+					}
+					// 任务完成后减少worker计数
+					if task.Worker != nil {
+						task.Worker.Count--
 					}
 				}
 				s.mu.Unlock()
@@ -171,47 +199,58 @@ func (s *Scheduler) handleExecute(w http.ResponseWriter, r *http.Request) {
 	s.mu.Unlock()
 
 	var selectedWorker *Worker
-	var oldCount int = math.MaxInt
-	// 查找可用Worker
+	minCount := math.MaxInt
+	// 查找可用Worker - 修复负载均衡逻辑
 	s.mu.RLock()
 	for _, worker := range s.workers {
 		for _, method := range worker.Methods {
 			if method == req.Method {
-				if worker.Count < oldCount {
+				if worker.Count < minCount {
 					selectedWorker = worker
+					minCount = worker.Count
 				}
+				break // 找到支持的方法就跳出内层循环
 			}
-		}
-		if oldCount == 0 {
-			break
 		}
 	}
 	s.mu.RUnlock()
 
 	if selectedWorker == nil {
+		s.mu.Lock()
 		task.Status = "error"
 		task.Result = "服务不可用"
+		s.mu.Unlock()
 	} else {
-		defer func() {
-			selectedWorker.Count--
-		}()
+		// 先增加计数，防止并发分配到同一个worker
+		s.mu.Lock()
+		selectedWorker.Count++
 		task.Worker = selectedWorker
 		task.Status = "processing"
+		s.mu.Unlock()
+
 		if err := selectedWorker.Conn.WriteJSON(map[string]interface{}{
 			"type":   "task",
 			"taskId": task.ID,
 			"method": task.Method,
 			"params": task.Params,
 		}); err != nil {
+			// 发送失败时回滚状态
+			s.mu.Lock()
+			selectedWorker.Count--
 			task.Status = "error"
 			task.Result = err.Error()
+			s.mu.Unlock()
+			log.Printf("Failed to send task %s to worker %s: %v", task.ID, selectedWorker.ID, err)
 		}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	s.mu.RLock()
+	status := task.Status
+	s.mu.RUnlock()
 	json.NewEncoder(w).Encode(map[string]string{
 		"taskId": task.ID,
-		"status": task.Status,
+		"status": status,
 	})
 }
 
