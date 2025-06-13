@@ -20,11 +20,17 @@ func main() {
 	worker := workersdk.NewWorker(config)
 
 	// 3. 注册业务方法
-	if err := worker.RegisterMethod("add", addNumbers); err != nil {
+	if err := worker.RegisterMethod("add", addNumbers,
+		"计算两个数字的和",
+		"参数: {\"a\": number, \"b\": number}",
+		"返回: number"); err != nil {
 		log.Fatal("Failed to register add method:", err)
 	}
 
-	if err := worker.RegisterMethod("multiply", multiplyNumbers); err != nil {
+	if err := worker.RegisterMethod("multiply", multiplyNumbers,
+		"计算两个数字的乘积",
+		"参数: {\"a\": number, \"b\": number}",
+		"返回: number"); err != nil {
 		log.Fatal("Failed to register multiply method:", err)
 	}
 
@@ -46,7 +52,7 @@ func addNumbers(params json.RawMessage) (interface{}, error) {
 	if err := json.Unmarshal(params, &input); err != nil {
 		return nil, err
 	}
-	return map[string]float64{"result": input.A + input.B}, nil
+	return input.A + input.B, nil
 }
 
 // 乘法方法
@@ -58,5 +64,5 @@ func multiplyNumbers(params json.RawMessage) (interface{}, error) {
 	if err := json.Unmarshal(params, &input); err != nil {
 		return nil, err
 	}
-	return map[string]float64{"result": input.A * input.B}, nil
+	return input.A * input.B, nil
 }

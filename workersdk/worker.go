@@ -3,10 +3,11 @@ package workersdk
 import (
 	"encoding/json"
 	"errors"
-	"log"
 	"reflect"
 	"sync"
 	"time"
+
+	"github.com/go-enols/go-log"
 
 	"github.com/gorilla/websocket"
 )
@@ -29,6 +30,7 @@ type Worker struct {
 	config    Config
 	conn      *websocket.Conn
 	methods   map[string]reflect.Value
+	docs      map[string][]string
 	running   bool
 	stopChan  chan struct{}
 	connMutex sync.Mutex // 保护连接的并发访问
@@ -41,11 +43,12 @@ func NewWorker(config Config) *Worker {
 		config:   config,
 		methods:  make(map[string]reflect.Value),
 		stopChan: make(chan struct{}),
+		docs:     make(map[string][]string),
 	}
 }
 
 // 注册方法
-func (w *Worker) RegisterMethod(name string, handler interface{}) error {
+func (w *Worker) RegisterMethod(name string, handler interface{}, docs ...string) error {
 	// 验证handler必须是函数
 	handlerValue := reflect.ValueOf(handler)
 	if handlerValue.Kind() != reflect.Func {
@@ -58,6 +61,7 @@ func (w *Worker) RegisterMethod(name string, handler interface{}) error {
 	}
 
 	w.methods[name] = handlerValue
+	w.docs[name] = docs
 	return nil
 }
 
@@ -91,12 +95,13 @@ func (w *Worker) connect() error {
 			// 发送注册信息
 			registration := map[string]interface{}{
 				"group":   w.config.WorkerGroup,
-				"methods": w.getMethodNames(),
+				"methods": w.getMethodsWithDocs(),
 			}
-			if err := w.conn.WriteJSON(registration); err == nil {
-				return nil
+			if e := w.conn.WriteJSON(registration); e != nil {
+				log.Error(e)
+				w.conn.Close()
 			}
-			w.conn.Close()
+			return nil
 		}
 
 		retryCount++
@@ -162,23 +167,20 @@ func (w *Worker) processTasks() {
 		case "task":
 			go w.handleTask(msg.TaskID, msg.Method, msg.Params)
 		case "ping": // 添加对 ping 消息的处理
-			w.connMutex.Lock()
-			currentConn := w.conn
-			w.connMutex.Unlock()
 
-			if currentConn != nil {
+		w.connMutex.Lock()
+			if w.conn != nil {
 				pongMsg := map[string]string{"type": "pong"}
-				if err := currentConn.WriteJSON(pongMsg); err != nil {
+				if err := w.conn.WriteJSON(pongMsg); err != nil {
 					log.Printf("Failed to send pong to scheduler: %v", err)
 					// 连接出错时关闭连接
-					w.connMutex.Lock()
 					if w.conn != nil {
 						w.conn.Close()
 						w.conn = nil
 					}
-					w.connMutex.Unlock()
 				}
 			}
+			w.connMutex.Unlock()
 		}
 	}
 }
@@ -212,23 +214,20 @@ func (w *Worker) keepAlive() {
 		select {
 		case <-ticker.C:
 			w.connMutex.Lock()
-			conn := w.conn
-			w.connMutex.Unlock()
-
-			if conn == nil {
+			if w.conn == nil {
+				w.connMutex.Unlock()
 				continue
 			}
 
-			if err := conn.WriteJSON(map[string]string{"type": "ping"}); err != nil {
+			if err := w.conn.WriteJSON(map[string]string{"type": "ping"}); err != nil {
 				log.Printf("Ping failed: %v", err)
 				// 不要直接调用Stop，而是关闭连接让processTasks处理重连
-				w.connMutex.Lock()
 				if w.conn != nil {
 					w.conn.Close()
 					w.conn = nil
 				}
-				w.connMutex.Unlock()
 			}
+			w.connMutex.Unlock()
 		case <-w.stopChan:
 			return
 		}
@@ -265,31 +264,31 @@ func (w *Worker) sendResult(taskID string, result interface{}, err error) {
 	}
 
 	w.connMutex.Lock()
-	conn := w.conn
-	w.connMutex.Unlock()
-
-	if conn == nil {
+	defer w.connMutex.Unlock()
+	
+	if w.conn == nil {
 		log.Printf("Cannot send result for task %s: connection is nil", taskID)
 		return
 	}
 
-	if err := conn.WriteJSON(response); err != nil {
+	if err := w.conn.WriteJSON(response); err != nil {
 		log.Printf("Failed to send result for task %s: %v", taskID, err)
 		// 连接出错时关闭连接
-		w.connMutex.Lock()
 		if w.conn != nil {
 			w.conn.Close()
 			w.conn = nil
 		}
-		w.connMutex.Unlock()
 	}
 }
 
-// 获取所有注册的方法名
-func (w *Worker) getMethodNames() []string {
-	names := make([]string, 0, len(w.methods))
+// 获取方法和文档信息
+func (w *Worker) getMethodsWithDocs() []map[string]interface{} {
+	methods := make([]map[string]interface{}, 0, len(w.methods))
 	for name := range w.methods {
-		names = append(names, name)
+		methods = append(methods, map[string]interface{}{
+			"name": name,
+			"docs": w.docs[name],
+		})
 	}
-	return names
+	return methods
 }

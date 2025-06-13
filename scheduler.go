@@ -1,6 +1,7 @@
 package goserver
 
 import (
+	_ "embed"
 	"encoding/json"
 	"log"
 	"math"
@@ -11,6 +12,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
+
+//go:embed index.html
+var HTML string
 
 type Task struct {
 	ID      string
@@ -25,7 +29,7 @@ type Task struct {
 type Worker struct {
 	ID       string
 	Conn     *websocket.Conn
-	Methods  []string
+	Methods  []MethodInfo
 	LastPing time.Time
 	Count    int
 }
@@ -36,6 +40,18 @@ type Scheduler struct {
 	mu        sync.RWMutex
 	upgrader  websocket.Upgrader
 	taskQueue chan *Task
+}
+
+type WorkerInfo struct {
+	ID       string       `json:"id"`
+	Methods  []MethodInfo `json:"methods"`
+	LastPing time.Time    `json:"lastPing"`
+	Count    int          `json:"count"`
+}
+
+type MethodInfo struct {
+	Name string   `json:"name"`
+	Docs []string `json:"docs"`
 }
 
 func NewScheduler() *Scheduler {
@@ -56,8 +72,9 @@ func (s *Scheduler) handleWorkerConnection(w http.ResponseWriter, r *http.Reques
 
 	// 接收Worker注册信息
 	var reg struct {
-		ID      string   `json:"id"`
-		Methods []string `json:"methods"`
+		ID      string                   `json:"id"`
+		Group   string                   `json:"group"`
+		Methods []map[string]interface{} `json:"methods"`
 	}
 	if err := conn.ReadJSON(&reg); err != nil {
 		conn.Close()
@@ -66,10 +83,31 @@ func (s *Scheduler) handleWorkerConnection(w http.ResponseWriter, r *http.Reques
 
 	reg.ID = uuid.NewString()
 
+	// 解析方法信息
+	methods := make([]MethodInfo, 0, len(reg.Methods))
+	for _, methodData := range reg.Methods {
+		if name, ok := methodData["name"].(string); ok {
+			docs := []string{}
+			if docsInterface, exists := methodData["docs"]; exists {
+				if docsSlice, ok := docsInterface.([]interface{}); ok {
+					for _, doc := range docsSlice {
+						if docStr, ok := doc.(string); ok {
+							docs = append(docs, docStr)
+						}
+					}
+				}
+			}
+			methods = append(methods, MethodInfo{
+				Name: name,
+				Docs: docs,
+			})
+		}
+	}
+
 	worker := &Worker{
 		ID:       reg.ID,
 		Conn:     conn,
-		Methods:  reg.Methods,
+		Methods:  methods,
 		LastPing: time.Now(),
 		Count:    0,
 	}
@@ -204,12 +242,11 @@ func (s *Scheduler) handleExecute(w http.ResponseWriter, r *http.Request) {
 	s.mu.RLock()
 	for _, worker := range s.workers {
 		for _, method := range worker.Methods {
-			if method == req.Method {
+			if method.Name == req.Method {
 				if worker.Count < minCount {
 					selectedWorker = worker
 					minCount = worker.Count
 				}
-				break // 找到支持的方法就跳出内层循环
 			}
 		}
 	}
@@ -274,11 +311,46 @@ func (s *Scheduler) handleResult(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func (s *Scheduler) handleUI(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Write([]byte(HTML))
+}
+
+func (s *Scheduler) handleStatus(w http.ResponseWriter, r *http.Request) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	var workers []WorkerInfo
+	totalMethods := 0
+
+	for _, worker := range s.workers {
+		totalMethods += len(worker.Methods)
+		workers = append(workers, WorkerInfo{
+			ID:       worker.ID,
+			Methods:  worker.Methods,
+			LastPing: worker.LastPing,
+			Count:    worker.Count,
+		})
+	}
+
+	response := map[string]interface{}{
+		"workers":      workers,
+		"totalMethods": totalMethods,
+		"totalTasks":   len(s.tasks),
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+
 func (s *Scheduler) Start(addr string) {
+	http.HandleFunc("/", s.handleUI)
 	http.HandleFunc("/api/worker/connect", s.handleWorkerConnection)
 	http.HandleFunc("/api/execute", s.handleExecute)
 	http.HandleFunc("/api/result/", s.handleResult)
+	http.HandleFunc("/api/status", s.handleStatus)
 
 	log.Printf("Scheduler started on %s", addr)
+	log.Printf("Web UI available at: http://localhost%s", addr)
 	log.Fatal(http.ListenAndServe(addr, nil))
 }

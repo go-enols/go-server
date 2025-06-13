@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>调度器管理界面</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .stat-label {
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        .content {
+            padding: 30px;
+        }
+        .section {
+            margin-bottom: 40px;
+        }
+        .section h2 {
+            color: #333;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .worker-card {
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        .worker-header {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .worker-id {
+            font-weight: bold;
+            color: #495057;
+        }
+        .worker-status {
+            float: right;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            background: #28a745;
+            color: white;
+        }
+        .methods-list {
+            padding: 20px;
+        }
+        .method-item {
+            background: #f8f9fa;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+        }
+        .method-name {
+            font-weight: bold;
+            color: #495057;
+            margin-bottom: 8px;
+        }
+        .method-docs {
+            color: #6c757d;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+        .refresh-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-bottom: 20px;
+        }
+        .refresh-btn:hover {
+            background: #5a6fd8;
+        }
+        .no-data {
+            text-align: center;
+            color: #6c757d;
+            padding: 40px;
+            font-style: italic;
+        }
+        .debug-section {
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .debug-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .form-group label {
+            font-weight: bold;
+            color: #495057;
+        }
+        .form-group select,
+        .form-group textarea,
+        .form-group input {
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .form-group textarea {
+            min-height: 100px;
+            font-family: 'Courier New', monospace;
+        }
+        .execute-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+        }
+        .execute-btn:hover {
+            background: #218838;
+        }
+        .execute-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        .result-area {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .result-success {
+            border-left: 4px solid #28a745;
+            background: #d4edda;
+        }
+        .result-error {
+            border-left: 4px solid #dc3545;
+            background: #f8d7da;
+        }
+        .method-debug-btn {
+            background: #17a2b8;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.8em;
+            margin-left: 10px;
+        }
+        .method-debug-btn:hover {
+            background: #138496;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 调度器管理界面</h1>
+            <p>实时监控Worker状态和注册方法</p>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-number" id="workerCount">0</div>
+                <div class="stat-label">在线Worker</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="methodCount">0</div>
+                <div class="stat-label">注册方法</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="taskCount">0</div>
+                <div class="stat-label">任务总数</div>
+            </div>
+        </div>
+        
+        <div class="content">
+            <button class="refresh-btn" onclick="loadData()">🔄 刷新数据</button>
+            
+            <div class="section">
+                <h2>📋 Worker列表和注册方法</h2>
+                <div id="workersContainer">
+                    <div class="no-data">正在加载数据...</div>
+                </div>
+            </div>
+            
+            <div class="debug-section">
+                <h2>🔧 方法调试工具</h2>
+                <div class="debug-form">
+                    <div class="form-group">
+                        <label for="methodSelect">选择方法:</label>
+                        <select id="methodSelect">
+                            <option value="">请先选择一个方法</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="paramsInput">参数 (JSON格式):</label>
+                        <textarea id="paramsInput" placeholder='{"key": "value"}'></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="timeoutInput">超时时间 (秒):</label>
+                        <input type="number" id="timeoutInput" value="30" min="1" max="300">
+                    </div>
+                    <button class="execute-btn" onclick="executeMethod()" id="executeBtn">🚀 执行方法</button>
+                    <div id="resultArea" class="result-area" style="display: none;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function loadData() {
+            fetch('/api/status')
+                .then(response => response.json())
+                .then(data => {
+                    updateStats(data);
+                    updateWorkers(data.workers);
+                })
+                .catch(error => {
+                    console.error('Error loading data:', error);
+                    document.getElementById('workersContainer').innerHTML = 
+                        '<div class="no-data">❌ 加载数据失败</div>';
+                });
+        }
+
+        function updateStats(data) {
+            document.getElementById('workerCount').textContent = data.workers.length;
+            document.getElementById('methodCount').textContent = data.totalMethods;
+            document.getElementById('taskCount').textContent = data.totalTasks;
+        }
+
+        function updateWorkers(workers) {
+            const container = document.getElementById('workersContainer');
+            
+            if (workers.length === 0) {
+                container.innerHTML = '<div class="no-data">🔍 暂无Worker连接</div>';
+                updateMethodSelect([]);
+                return;
+            }
+            
+            // 收集所有可用的方法
+            let allMethods = [];
+            workers.forEach(function(worker) {
+                worker.methods.forEach(function(method) {
+                    if (!allMethods.find(m => m.name === method.name)) {
+                        allMethods.push(method);
+                    }
+                });
+            });
+            updateMethodSelect(allMethods);
+
+            let html = '';
+            workers.forEach(function(worker) {
+                html += '<div class="worker-card">';
+                html += '<div class="worker-header">';
+                html += '<span class="worker-id">Worker ID: ' + worker.id + '</span>';
+                html += '<span class="worker-status">在线</span>';
+                html += '<div style="clear: both; margin-top: 10px; color: #6c757d; font-size: 0.9em;">';
+                html += '最后心跳: ' + new Date(worker.lastPing).toLocaleString();
+                html += ' | 任务数: ' + worker.count;
+                html += '</div></div>';
+                html += '<div class="methods-list">';
+                
+                worker.methods.forEach(function(method) {
+                    html += '<div class="method-item">';
+                    html += '<div class="method-name">';
+                    html += '📌 ' + method.name;
+                    html += '<button class="method-debug-btn" onclick="selectMethodForDebug(\'' + method.name + '\')">';
+                    html += '🔧 调试</button>';
+                    html += '</div>';
+                    html += '<div class="method-docs">';
+                    if (method.docs && method.docs.length > 0) {
+                        html += method.docs.join('<br>');
+                    } else {
+                        html += '暂无文档说明';
+                    }
+                    html += '</div></div>';
+                });
+                
+                html += '</div></div>';
+            });
+            
+            container.innerHTML = html;
+        }
+
+        function updateMethodSelect(methods) {
+            const select = document.getElementById('methodSelect');
+            const currentValue = select.value; // 保存当前选择的值
+            
+            select.innerHTML = '<option value="">请先选择一个方法</option>';
+            
+            methods.forEach(function(method) {
+                const option = document.createElement('option');
+                option.value = method.name;
+                option.textContent = method.name;
+                select.appendChild(option);
+            });
+            
+            // 恢复之前选择的值（如果该方法仍然存在）
+            if (currentValue && methods.find(m => m.name === currentValue)) {
+                select.value = currentValue;
+            }
+        }
+        
+        function selectMethodForDebug(methodName) {
+            document.getElementById('methodSelect').value = methodName;
+            // 滚动到调试区域
+            document.querySelector('.debug-section').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function executeMethod() {
+            const methodName = document.getElementById('methodSelect').value;
+            const paramsText = document.getElementById('paramsInput').value;
+            const timeout = parseInt(document.getElementById('timeoutInput').value);
+            const resultArea = document.getElementById('resultArea');
+            const executeBtn = document.getElementById('executeBtn');
+            
+            if (!methodName) {
+                alert('请先选择一个方法');
+                return;
+            }
+            
+            let params;
+            try {
+                params = paramsText ? JSON.parse(paramsText) : {};
+            } catch (e) {
+                alert('参数格式错误，请输入有效的JSON格式');
+                return;
+            }
+            
+            executeBtn.disabled = true;
+            executeBtn.textContent = '⏳ 执行中...';
+            resultArea.style.display = 'block';
+            resultArea.className = 'result-area';
+            resultArea.textContent = '正在执行方法: ' + methodName + '\n参数: ' + JSON.stringify(params, null, 2) + '\n\n等待结果...';
+            
+            // 提交任务
+            fetch('/api/execute', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    method: methodName,
+                    params: params,
+                    timeout: timeout
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    executeBtn.disabled = false;
+                    executeBtn.textContent = '🚀 执行方法';
+                    resultArea.className = 'result-area result-error';
+                    resultArea.textContent = '❌ 提交任务失败:\n' + data.error;
+                    return;
+                }
+                
+                // 开始轮询任务结果
+                const taskId = data.taskId;
+                pollTaskResult(taskId, timeout * 1000, executeBtn, resultArea);
+            })
+            .catch(error => {
+                executeBtn.disabled = false;
+                executeBtn.textContent = '🚀 执行方法';
+                resultArea.className = 'result-area result-error';
+                resultArea.textContent = '❌ 网络错误:\n' + error.message;
+            });
+        }
+        
+        function pollTaskResult(taskId, timeoutMs, executeBtn, resultArea) {
+            const startTime = Date.now();
+            const pollInterval = 500; // 每500ms轮询一次
+            
+            function poll() {
+                if (Date.now() - startTime > timeoutMs) {
+                    executeBtn.disabled = false;
+                    executeBtn.textContent = '🚀 执行方法';
+                    resultArea.className = 'result-area result-error';
+                    resultArea.textContent = '❌ 任务执行超时';
+                    return;
+                }
+                
+                fetch('/api/result/' + taskId)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'done') {
+                            executeBtn.disabled = false;
+                            executeBtn.textContent = '🚀 执行方法';
+                            resultArea.className = 'result-area result-success';
+                            resultArea.textContent = '✅ 执行成功:\n' + JSON.stringify(data.result, null, 2);
+                        } else if (data.status === 'error') {
+                            executeBtn.disabled = false;
+                            executeBtn.textContent = '🚀 执行方法';
+                            resultArea.className = 'result-area result-error';
+                            resultArea.textContent = '❌ 执行失败:\n' + JSON.stringify(data.result, null, 2);
+                        } else {
+                            // 任务还在处理中，继续轮询
+                            setTimeout(poll, pollInterval);
+                        }
+                    })
+                    .catch(error => {
+                        executeBtn.disabled = false;
+                        executeBtn.textContent = '🚀 执行方法';
+                        resultArea.className = 'result-area result-error';
+                        resultArea.textContent = '❌ 获取结果失败:\n' + error.message;
+                    });
+            }
+            
+            poll();
+        }
+        
+        // 页面加载时获取数据
+        loadData();
+        
+        // 每5秒自动刷新
+        setInterval(loadData, 5000);
+    </script>
+</body>
+</html>
