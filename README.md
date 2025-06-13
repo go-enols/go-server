@@ -78,10 +78,7 @@
 
 **安装方式**:
 ```bash
-# 从 PyPI 安装（推荐）
-pip install go-server-sdk
-
-# 或从源码安装
+# 从源码安装
 cd python-sdk
 pip install -e .
 ```
