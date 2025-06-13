@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"log"
 
-	"github.com/go-enols/go-server/workersdk" // 假设SDK被导入为这个包名
+	"github.com/go-enols/go-server/go-sdk/workersdk" // 假设SDK被导入为这个包名
 )
 
 func main() {

@@ -16,42 +16,12 @@ import (
 //go:embed index.html
 var HTML string
 
-type Task struct {
-	ID      string
-	Method  string
-	Params  json.RawMessage
-	Result  any
-	Status  string // "pending", "processing", "done", "error"
-	Worker  *Worker
-	Created time.Time
-}
-
-type Worker struct {
-	ID       string
-	Conn     *websocket.Conn
-	Methods  []MethodInfo
-	LastPing time.Time
-	Count    int
-}
-
 type Scheduler struct {
 	workers   map[string]*Worker
 	tasks     map[string]*Task
 	mu        sync.RWMutex
 	upgrader  websocket.Upgrader
 	taskQueue chan *Task
-}
-
-type WorkerInfo struct {
-	ID       string       `json:"id"`
-	Methods  []MethodInfo `json:"methods"`
-	LastPing time.Time    `json:"lastPing"`
-	Count    int          `json:"count"`
-}
-
-type MethodInfo struct {
-	Name string   `json:"name"`
-	Docs []string `json:"docs"`
 }
 
 func NewScheduler() *Scheduler {
@@ -125,41 +95,40 @@ func (s *Scheduler) handleWorkerConnection(w http.ResponseWriter, r *http.Reques
 		defer conn.Close()
 
 		for {
-			select {
-			case <-ticker.C:
-				s.mu.Lock()
-				if time.Since(worker.LastPing) > 45*time.Second {
-					// 处理该worker正在执行的任务
-					for _, task := range s.tasks {
-						if task.Worker != nil && task.Worker.ID == worker.ID && task.Status == "processing" {
-							task.Status = "error"
-							task.Result = "Worker timeout during task execution"
-							log.Printf("Task %s failed due to worker %s timeout", task.ID, worker.ID)
-						}
+			<-ticker.C
+			s.mu.Lock()
+			if time.Since(worker.LastPing) > 45*time.Second {
+				// 处理该worker正在执行的任务
+				for _, task := range s.tasks {
+					if task.Worker != nil && task.Worker.ID == worker.ID && task.Status == "processing" {
+						task.Status = "error"
+						task.Result = "Worker timeout during task execution"
+						log.Printf("Task %s failed due to worker %s timeout", task.ID, worker.ID)
 					}
-					delete(s.workers, worker.ID)
-					s.mu.Unlock()
-					log.Printf("Worker timeout: %s", worker.ID)
-					return
 				}
+				delete(s.workers, worker.ID)
 				s.mu.Unlock()
-
-				if err := conn.WriteJSON(map[string]string{"type": "ping"}); err != nil {
-					s.mu.Lock()
-					// 处理该worker正在执行的任务
-					for _, task := range s.tasks {
-						if task.Worker != nil && task.Worker.ID == worker.ID && task.Status == "processing" {
-							task.Status = "error"
-							task.Result = "Worker disconnected during task execution"
-							log.Printf("Task %s failed due to worker %s ping failure", task.ID, worker.ID)
-						}
-					}
-					delete(s.workers, worker.ID)
-					s.mu.Unlock()
-					log.Printf("Worker disconnected: %s", worker.ID)
-					return
-				}
+				log.Printf("Worker timeout: %s", worker.ID)
+				return
 			}
+			s.mu.Unlock()
+
+			if err := conn.WriteJSON(map[string]string{"type": "ping"}); err != nil {
+				s.mu.Lock()
+				// 处理该worker正在执行的任务
+				for _, task := range s.tasks {
+					if task.Worker != nil && task.Worker.ID == worker.ID && task.Status == "processing" {
+						task.Status = "error"
+						task.Result = "Worker disconnected during task execution"
+						log.Printf("Task %s failed due to worker %s ping failure", task.ID, worker.ID)
+					}
+				}
+				delete(s.workers, worker.ID)
+				s.mu.Unlock()
+				log.Printf("Worker disconnected: %s", worker.ID)
+				return
+			}
+
 		}
 	}()
 
@@ -287,7 +256,7 @@ func (s *Scheduler) handleExecute(w http.ResponseWriter, r *http.Request) {
 	s.mu.RUnlock()
 	json.NewEncoder(w).Encode(map[string]string{
 		"taskId": task.ID,
-		"status": status,
+		"status": string(status),
 	})
 }
 

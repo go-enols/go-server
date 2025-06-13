@@ -24,3 +24,4 @@ log
 
 # Specific log directory
 examples/client/log/
+node_modules/

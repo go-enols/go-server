@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/go-enols/go-server/schedulersdk"
+	"github.com/go-enols/go-server/go-sdk/schedulersdk"
 )
 
 func Call(host, method string, params interface{}, out interface{}) error {

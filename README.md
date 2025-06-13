@@ -49,17 +49,123 @@
 │   │   └── main.go
 │   └── worker/       // Worker 示例
 │       └── main.go
+├── go-sdk/           // Go SDK
+│   ├── schedulersdk/ // 客户端与调度器交互的 SDK
+│   │   ├── client.go
+│   │   └── retry_client.go
+│   └── workersdk/    // Worker 与调度器交互的 SDK
+│       ├── call.go
+│       └── worker.go
+├── python-sdk/       // Python SDK
+│   ├── schedulersdk/ // Python 客户端 SDK
+│   ├── workersdk/    // Python Worker SDK
+│   └── examples/     // Python 示例代码
+├── node-sdk/         // Node.js SDK
+│   ├── schedulersdk/ // Node.js 客户端 SDK
+│   ├── workersdk/    // Node.js Worker SDK
+│   └── examples/     // Node.js 示例代码
 ├── image/            // 项目相关图片
-├── schedulersdk/     // 客户端与调度器交互的 SDK
-│   ├── client.go
-│   └── retry_client.go
-├── workersdk/        // Worker 与调度器交互的 SDK
-│   ├── call.go
-│   └── worker.go
 ├── go.mod            // Go 模块文件
 ├── go.sum            // Go 模块校验和文件
 ├── index.html        // Web UI 界面（嵌入在 scheduler.go 中）
 └── scheduler.go      // 调度器核心逻辑实现（包含 Web UI）
+```
+
+## 多语言 SDK 支持
+
+本项目提供多种编程语言的 SDK，方便不同技术栈的开发者使用：
+
+### 🐍 Python SDK
+
+**安装方式**:
+```bash
+# 从 PyPI 安装（推荐）
+pip install go-server-sdk
+
+# 或从源码安装
+cd python-sdk
+pip install -e .
+```
+
+**快速使用**:
+```python
+# 客户端调用
+from schedulersdk import SchedulerClient
+
+client = SchedulerClient("http://localhost:8080")
+result = client.execute_sync("add", {"a": 1, "b": 2}, timeout=30.0)
+print(f"Result: {result.result}")
+
+# Worker 注册
+from workersdk import Worker, Config
+
+def add_numbers(params):
+    return params["a"] + params["b"]
+
+config = Config(
+    scheduler_url="http://localhost:8080",
+    worker_group="python_workers"
+)
+worker = Worker(config)
+worker.register_method("add", add_numbers, "Add two numbers")
+worker.start()
+```
+
+### 🟨 Node.js SDK
+
+**安装方式**:
+```bash
+npm install go-server-sdk
+```
+
+**快速使用**:
+```javascript
+// 客户端调用
+const { SchedulerClient } = require('go-server-sdk');
+
+const client = new SchedulerClient('http://localhost:8080');
+const result = await client.executeSync('add', { a: 1, b: 2 });
+console.log('Result:', result.result);
+
+// Worker 注册
+const { Worker } = require('go-server-sdk');
+
+const worker = new Worker({
+    schedulerUrl: 'http://localhost:8080',
+    workerGroup: 'node_workers'
+});
+
+worker.registerMethod('add', (params) => {
+    return params.a + params.b;
+}, 'Add two numbers');
+
+worker.start();
+```
+
+### 🔵 Go SDK
+
+**使用方式**:
+```bash
+go get github.com/go-enols/go-server
+```
+
+**快速使用**:
+```go
+// 客户端调用
+import "github.com/go-enols/go-server/workersdk"
+
+result := workersdk.Call("http://localhost:8080", "add", map[string]any{
+    "a": 1,
+    "b": 2,
+}, nil)
+
+// Worker 注册
+import "github.com/go-enols/go-server/workersdk"
+
+worker := workersdk.NewWorker("http://localhost:8080", "go_workers")
+worker.RegisterMethod("add", addNumbers, "Add two numbers")
+worker.Start()
+```
 
 ## 核心组件
 
@@ -134,7 +240,12 @@ workersdk.Call("http://localhost:8080", "add", map[string]any{
 ### 1. 启动调度器
 
 ```bash
-go run examples/scheduler/main.go
+# 方式一：直接运行
+go run go-sdk/examples/scheduler/main.go
+
+# 方式二：构建后运行
+go build -o scheduler ./go-sdk/examples/scheduler
+./scheduler
 ```
 
 调度器启动后会显示：
@@ -146,7 +257,7 @@ Web UI available at: http://localhost:8080
 ### 2. 启动 Worker
 
 ```bash
-go run examples/worker/main.go
+go run go-sdk/examples/worker/main.go
 ```
 
 Worker 启动后会自动连接到调度器并注册方法。
@@ -162,7 +273,7 @@ Worker 启动后会自动连接到调度器并注册方法。
 ### 4. 使用客户端 API
 
 ```bash
-go run examples/client/main.go
+go run go-sdk/examples/client/main.go
 ```
 
 或者直接调用 API：

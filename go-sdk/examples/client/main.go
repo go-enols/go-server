@@ -1,6 +1,6 @@
 package main
 
-import "github.com/go-enols/go-server/workersdk"
+import "github.com/go-enols/go-server/go-sdk/workersdk"
 
 func main() {
 	workersdk.Call("http://localhost:8080", "add", map[string]any{
