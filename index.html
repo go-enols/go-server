@@ -1027,8 +1027,7 @@
             try {
                 params = paramsText ? JSON.parse(paramsText) : {};
             } catch (e) {
-                alert('参数格式错误，请输入有效的JSON格式');
-                return;
+                params = paramsText
             }
             
             executeBtn.disabled = true;
