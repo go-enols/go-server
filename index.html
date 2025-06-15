@@ -1027,7 +1027,7 @@
             try {
                 params = paramsText ? JSON.parse(paramsText) : {};
             } catch (e) {
-                params = paramsText
+                params = `"${paramsText}"`
             }
             
             executeBtn.disabled = true;
@@ -1094,7 +1094,12 @@
                             
                             // 保存调试结果
                             const methodName = document.getElementById('methodSelect').value;
-                            const params = JSON.parse(document.getElementById('paramsInput').value);
+                            let params 
+                            try{
+                                params = JSON.parse(document.getElementById('paramsInput').value);
+                            }catch(e){
+                                params = `"${document.getElementById('paramsInput').value}"`;
+                            }
                             debugResults.push({
                                 timestamp: new Date().toISOString(),
                                 method: methodName,
