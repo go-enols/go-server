@@ -5,6 +5,7 @@
   "main": "index.js",
   "types": "types/index.d.ts",
   "scripts": {
+    "test": "echo \"No tests specified\" && exit 0",
     "example:client": "node examples/client.js",
     "example:worker": "node examples/worker.js",
     "example:demo": "node examples/demo.js"
