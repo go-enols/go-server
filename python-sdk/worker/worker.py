@@ -98,8 +98,8 @@ class Worker:
             if self.ws:
                 try:
                     self.ws.close()
-                except Exception:
-                    pass
+                except Exception as e:
+                    self.logger.debug(f"Error closing WebSocket: {e}")
                 self.ws = None
 
         self.logger.info("Worker stopped")
@@ -282,5 +282,5 @@ class Worker:
                 with self.conn_lock:
                     if self.ws:
                         self.ws.send(json.dumps(response))
-            except Exception:
-                pass  # Ignore errors when sending error response
+            except Exception as e:
+                self.logger.debug(f"Error sending error response: {e}")

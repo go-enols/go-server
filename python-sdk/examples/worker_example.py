@@ -130,7 +130,8 @@ def random_number(params: Dict[str, Any]) -> Dict[str, Any]:
     if count > 1000:
         raise ValueError("Cannot generate more than 1000 random numbers")
 
-    numbers = [random.randint(min_val, max_val) for _ in range(count)]
+    # Using random for demo purposes only, not for cryptographic use
+    numbers = [random.randint(min_val, max_val) for _ in range(count)]  # nosec B311
 
     return {
         "numbers": numbers,

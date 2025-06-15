@@ -146,9 +146,9 @@ class SchedulerClient:
             except RuntimeError:
                 # Re-raise task execution errors
                 raise
-            except Exception:
+            except Exception as e:
                 # Continue polling on other errors
-                pass
+                print(f"Polling error (continuing): {e}")
 
             time.sleep(0.5)
 
