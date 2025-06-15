@@ -8,9 +8,9 @@ class Worker extends EventEmitter {
       schedulerURL: config.schedulerURL,
       workerGroup: config.workerGroup,
       maxRetry: config.maxRetry || 3,
-      pingInterval: config.pingInterval || 30 // 秒
+      pingInterval: config.pingInterval || 30, // 秒
     };
-    
+
     this.ws = null;
     this.methods = new Map();
     this.docs = new Map();
@@ -41,10 +41,10 @@ class Worker extends EventEmitter {
   async start() {
     this.running = true;
     this.reconnect = true;
-    
+
     await this.connect();
     this.startKeepAlive();
-    
+
     console.log(`Worker ${this.config.workerGroup} started`);
   }
 
@@ -54,47 +54,51 @@ class Worker extends EventEmitter {
   async connect() {
     return new Promise((resolve, reject) => {
       let retryCount = 0;
-      
+
       const attemptConnect = () => {
         if (retryCount >= this.config.maxRetry) {
-          reject(new Error(`Failed to connect after ${this.config.maxRetry} attempts`));
+          reject(
+            new Error(
+              `Failed to connect after ${this.config.maxRetry} attempts`
+            )
+          );
           return;
         }
 
         try {
           this.ws = new WebSocket(this.config.schedulerURL);
-          
+
           this.ws.on('open', () => {
             console.log('Connected to scheduler');
-            
+
             // 发送注册信息
             const registration = {
               group: this.config.workerGroup,
-              methods: this.getMethodsWithDocs()
+              methods: this.getMethodsWithDocs(),
             };
-            
+
             this.ws.send(JSON.stringify(registration));
             resolve();
           });
-          
+
           this.ws.on('message', (data) => {
             this.handleMessage(data);
           });
-          
+
           this.ws.on('close', (code, reason) => {
             console.log(`Connection closed: ${code} ${reason}`);
             this.ws = null;
-            
+
             if (this.running && this.reconnect) {
               console.log('Attempting to reconnect in 5 seconds...');
               this.reconnectTimer = setTimeout(() => {
-                this.connect().catch(err => {
+                this.connect().catch((err) => {
                   console.error('Reconnect failed:', err);
                 });
               }, 5000);
             }
           });
-          
+
           this.ws.on('error', (error) => {
             console.error('WebSocket error:', error);
             if (retryCount === 0) {
@@ -102,13 +106,12 @@ class Worker extends EventEmitter {
               setTimeout(attemptConnect, 1000 * retryCount);
             }
           });
-          
-        } catch (error) {
+        } catch {
           retryCount++;
           setTimeout(attemptConnect, 1000 * retryCount);
         }
       };
-      
+
       attemptConnect();
     });
   }
@@ -119,7 +122,7 @@ class Worker extends EventEmitter {
   async handleMessage(data) {
     try {
       const message = JSON.parse(data.toString());
-      
+
       switch (message.type) {
         case 'task':
           this.handleTask(message.taskId, message.method, message.params);
@@ -149,7 +152,6 @@ class Worker extends EventEmitter {
       // 调用注册的方法
       const result = await handler(params);
       this.sendResult(taskId, result, null);
-      
     } catch (error) {
       this.sendResult(taskId, null, error);
     }
@@ -160,13 +162,15 @@ class Worker extends EventEmitter {
    */
   sendResult(taskId, result, error) {
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
-      console.error(`Cannot send result for task ${taskId}: connection is not open`);
+      console.error(
+        `Cannot send result for task ${taskId}: connection is not open`
+      );
       return;
     }
 
     const response = {
       type: 'result',
-      taskId: taskId
+      taskId: taskId,
     };
 
     if (error) {
@@ -251,7 +255,7 @@ class Worker extends EventEmitter {
     for (const [name] of this.methods) {
       methods.push({
         name: name,
-        docs: this.docs.get(name) || []
+        docs: this.docs.get(name) || [],
       });
     }
     return methods;

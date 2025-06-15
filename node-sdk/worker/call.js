@@ -9,21 +9,17 @@ const SchedulerClient = require('../scheduler/client');
  */
 async function call(host, method, params) {
   const client = new SchedulerClient(host);
-  
-  try {
-    const res = await client.execute(method, params);
-    
-    // 直接获取结果，execute 只返回 taskId 和 status
-    const result = await client.getResult(res.taskId);
-    
-    if (result.status === 'error') {
-      throw new Error(result.result);
-    }
-    
-    return result.result;
-  } catch (error) {
-    throw error;
+
+  const res = await client.execute(method, params);
+
+  // 直接获取结果，execute 只返回 taskId 和 status
+  const result = await client.getResult(res.taskId);
+
+  if (result.status === 'error') {
+    throw new Error(result.result);
   }
+
+  return result.result;
 }
 
 module.exports = call;

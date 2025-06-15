@@ -2,6 +2,7 @@
 
 Node.js SDK for go-server distributed task scheduler and worker system.
 [GitHub](https://github.com/go-enols/go-server)
+
 ## Installation
 
 ```bash
@@ -31,7 +32,7 @@ async function executeTask() {
     // Submit task
     const response = await client.execute('add', { a: 1, b: 2 });
     console.log('Task submitted:', response.taskId);
-    
+
     // Get result
     const result = await client.getResult(response.taskId);
     console.log('Result:', result.result);
@@ -63,19 +64,27 @@ const worker = new Worker({
   schedulerURL: 'ws://localhost:8080/ws',
   workerGroup: 'math-workers',
   maxRetry: 3,
-  pingInterval: 30
+  pingInterval: 30,
 });
 
 // Register methods
-worker.registerMethod('add', async (params) => {
-  const { a, b } = JSON.parse(params);
-  return a + b;
-}, 'Add two numbers');
+worker.registerMethod(
+  'add',
+  async (params) => {
+    const { a, b } = JSON.parse(params);
+    return a + b;
+  },
+  'Add two numbers'
+);
 
-worker.registerMethod('multiply', async (params) => {
-  const { a, b } = JSON.parse(params);
-  return a * b;
-}, 'Multiply two numbers');
+worker.registerMethod(
+  'multiply',
+  async (params) => {
+    const { a, b } = JSON.parse(params);
+    return a * b;
+  },
+  'Multiply two numbers'
+);
 
 // Start worker
 async function startWorker() {
@@ -119,11 +128,13 @@ async function simpleCall() {
 ### SchedulerClient
 
 #### Constructor
+
 - `new SchedulerClient(baseURL, timeout?)` - Create a new scheduler client
   - `baseURL`: Scheduler server URL
   - `timeout`: Request timeout in milliseconds (default: 30000)
 
 #### Methods
+
 - `execute(method, params)` - Submit a task for execution, returns `{taskId, status}`
 - `getResult(taskId)` - Get task result (with automatic polling for pending tasks), returns `{taskId, status, result}`
 - `executeSync(method, params, timeout?)` - Execute task synchronously with polling, returns `{taskId, status, result}`
@@ -131,6 +142,7 @@ async function simpleCall() {
 ### Worker
 
 #### Constructor
+
 - `new Worker(config)` - Create a new worker
   - `config.schedulerURL`: WebSocket URL of the scheduler
   - `config.workerGroup`: Worker group name
@@ -138,6 +150,7 @@ async function simpleCall() {
   - `config.pingInterval`: Ping interval in seconds (default: 30)
 
 #### Methods
+
 - `registerMethod(name, handler, ...docs)` - Register a method handler
   - `name`: Method name
   - `handler`: Async function that processes the task
@@ -152,6 +165,7 @@ Simple RPC call function that submits a task and waits for the result.
 ## Error Handling
 
 All methods throw errors for:
+
 - Network connection issues
 - HTTP errors
 - Task execution errors

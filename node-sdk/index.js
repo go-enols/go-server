@@ -5,5 +5,5 @@ const call = require('./worker/call');
 module.exports = {
   SchedulerClient,
   Worker,
-  call
+  call,
 };

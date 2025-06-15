@@ -1,19 +1,22 @@
 """Setup script for go-server Python SDK"""
 
-from setuptools import setup, find_packages
 import os
+
+from setuptools import find_packages, setup
 
 # Read the README file
 here = os.path.abspath(os.path.dirname(__file__))
 try:
-    with open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
+    with open(os.path.join(here, "README.md"), encoding="utf-8") as f:
         long_description = f.read()
 except FileNotFoundError:
     long_description = "Python SDK for go-server distributed task scheduling system"
 
 # Read requirements
-with open(os.path.join(here, 'requirements.txt')) as f:
-    requirements = [line.strip() for line in f if line.strip() and not line.startswith('#')]
+with open(os.path.join(here, "requirements.txt")) as f:
+    requirements = [
+        line.strip() for line in f if line.strip() and not line.startswith("#")
+    ]
 
 setup(
     name="go-server-sdk",

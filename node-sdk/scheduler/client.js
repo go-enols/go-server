@@ -6,8 +6,8 @@ class SchedulerClient {
     this.httpClient = axios.create({
       timeout: timeout,
       headers: {
-        'Content-Type': 'application/json'
-      }
+        'Content-Type': 'application/json',
+      },
     });
   }
 
@@ -21,7 +21,7 @@ class SchedulerClient {
     try {
       const requestBody = {
         method: method,
-        params: params
+        params: params,
       };
 
       const response = await this.httpClient.post(
@@ -32,10 +32,13 @@ class SchedulerClient {
       return response.data;
     } catch (error) {
       if (error.response) {
-        const errorData = typeof error.response.data === 'string' 
-          ? error.response.data 
-          : JSON.stringify(error.response.data);
-        throw new Error(`HTTP request failed with status ${error.response.status}: ${errorData}`);
+        const errorData =
+          typeof error.response.data === 'string'
+            ? error.response.data
+            : JSON.stringify(error.response.data);
+        throw new Error(
+          `HTTP request failed with status ${error.response.status}: ${errorData}`
+        );
       } else if (error.request) {
         throw new Error('HTTP request failed: No response received');
       } else {
@@ -71,10 +74,13 @@ class SchedulerClient {
       return result;
     } catch (error) {
       if (error.response) {
-        const errorData = typeof error.response.data === 'string' 
-          ? error.response.data 
-          : JSON.stringify(error.response.data);
-        throw new Error(`HTTP request failed with status ${error.response.status}: ${errorData}`);
+        const errorData =
+          typeof error.response.data === 'string'
+            ? error.response.data
+            : JSON.stringify(error.response.data);
+        throw new Error(
+          `HTTP request failed with status ${error.response.status}: ${errorData}`
+        );
       } else if (error.request) {
         throw new Error('HTTP request failed: No response received');
       } else {
@@ -97,18 +103,14 @@ class SchedulerClient {
     // 轮询结果
     const start = Date.now();
     while (Date.now() - start < timeout) {
-      try {
-        const resultResp = await this.getResult(execResp.taskId);
-        
-        if (resultResp.status === 'done') {
-          return resultResp;
-        } else if (resultResp.status === 'error') {
-          throw new Error(resultResp.result);
-        }
-        // 'pending' 或 'processing' 状态继续等待
-      } catch (error) {
-        throw error;
+      const resultResp = await this.getResult(execResp.taskId);
+
+      if (resultResp.status === 'done') {
+        return resultResp;
+      } else if (resultResp.status === 'error') {
+        throw new Error(resultResp.result);
       }
+      // 'pending' 或 'processing' 状态继续等待
 
       await this.sleep(500); // 等待500毫秒
     }
@@ -122,7 +124,7 @@ class SchedulerClient {
    * @returns {Promise<void>}
    */
   sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }
 
