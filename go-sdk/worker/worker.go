@@ -1,3 +1,4 @@
+// Package worker provides functionality for creating and managing distributed task workers.
 package worker
 
 import (
@@ -12,7 +13,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-// Worker 配置
+// Config represents the configuration for a worker.
 type Config struct {
 	SchedulerURL string // 调度器地址
 	WorkerGroup  string // Worker分组
@@ -37,7 +38,7 @@ type Worker struct {
 	reconnect bool       // 是否自动重连
 }
 
-// 创建新Worker实例
+// NewWorker creates a new Worker instance with the given configuration.
 func NewWorker(config Config) *Worker {
 	return &Worker{
 		config:   config,
@@ -47,7 +48,7 @@ func NewWorker(config Config) *Worker {
 	}
 }
 
-// 注册方法
+// RegisterMethod registers a method handler with the worker.
 func (w *Worker) RegisterMethod(name string, handler interface{}, docs ...string) error {
 	// 验证handler必须是函数
 	handlerValue := reflect.ValueOf(handler)
@@ -65,7 +66,7 @@ func (w *Worker) RegisterMethod(name string, handler interface{}, docs ...string
 	return nil
 }
 
-// 修改Start方法支持自动重连
+// Start starts the worker with automatic reconnection support.
 func (w *Worker) Start() error {
 	w.running = true
 	w.reconnect = true
@@ -99,7 +100,9 @@ func (w *Worker) connect() error {
 			}
 			if e := w.conn.WriteJSON(registration); e != nil {
 				log.Error(e)
-				w.conn.Close()
+				if closeErr := w.conn.Close(); closeErr != nil {
+					log.Printf("Failed to close connection: %v", closeErr)
+				}
 			}
 			return nil
 		}
@@ -155,7 +158,9 @@ func (w *Worker) processTasks() {
 			// 关闭当前连接
 			w.connMutex.Lock()
 			if w.conn != nil {
-				w.conn.Close()
+				if closeErr := w.conn.Close(); closeErr != nil {
+					log.Printf("Failed to close connection: %v", closeErr)
+				}
 				w.conn = nil
 			}
 			w.connMutex.Unlock()
@@ -168,14 +173,16 @@ func (w *Worker) processTasks() {
 			go w.handleTask(msg.TaskID, msg.Method, msg.Params)
 		case "ping": // 添加对 ping 消息的处理
 
-		w.connMutex.Lock()
+			w.connMutex.Lock()
 			if w.conn != nil {
 				pongMsg := map[string]string{"type": "pong"}
 				if err := w.conn.WriteJSON(pongMsg); err != nil {
 					log.Printf("Failed to send pong to scheduler: %v", err)
 					// 连接出错时关闭连接
 					if w.conn != nil {
-						w.conn.Close()
+						if closeErr := w.conn.Close(); closeErr != nil {
+							log.Printf("Failed to close connection: %v", closeErr)
+						}
 						w.conn = nil
 					}
 				}
@@ -197,9 +204,12 @@ func (w *Worker) Stop() {
 
 	w.connMutex.Lock()
 	if w.conn != nil {
-		w.conn.WriteMessage(websocket.CloseMessage,
-			websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
-		w.conn.Close()
+		if err := w.conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "")); err != nil {
+			log.Printf("Failed to write close message: %v", err)
+		}
+		if closeErr := w.conn.Close(); closeErr != nil {
+			log.Printf("Failed to close connection: %v", closeErr)
+		}
 		w.conn = nil
 	}
 	w.connMutex.Unlock()
@@ -223,7 +233,9 @@ func (w *Worker) keepAlive() {
 				log.Printf("Ping failed: %v", err)
 				// 不要直接调用Stop，而是关闭连接让processTasks处理重连
 				if w.conn != nil {
-					w.conn.Close()
+					if closeErr := w.conn.Close(); closeErr != nil {
+						log.Printf("Failed to close connection: %v", closeErr)
+					}
 					w.conn = nil
 				}
 			}
@@ -265,7 +277,7 @@ func (w *Worker) sendResult(taskID string, result interface{}, err error) {
 
 	w.connMutex.Lock()
 	defer w.connMutex.Unlock()
-	
+
 	if w.conn == nil {
 		log.Printf("Cannot send result for task %s: connection is nil", taskID)
 		return
@@ -275,7 +287,9 @@ func (w *Worker) sendResult(taskID string, result interface{}, err error) {
 		log.Printf("Failed to send result for task %s: %v", taskID, err)
 		// 连接出错时关闭连接
 		if w.conn != nil {
-			w.conn.Close()
+			if closeErr := w.conn.Close(); closeErr != nil {
+				log.Printf("Failed to close connection: %v", closeErr)
+			}
 			w.conn = nil
 		}
 	}

@@ -1,3 +1,4 @@
+// Package worker provides utility functions for calling remote methods through the scheduler.
 package worker
 
 import (
@@ -9,7 +10,7 @@ import (
 	"github.com/go-enols/go-server/go-sdk/scheduler"
 )
 
-func Call(host, method string, params interface{}, out interface{}) error {
+func Call(host, method string, params, out interface{}) error {
 	// 检查out参数是否为指针类型
 	if out != nil {
 		outType := reflect.TypeOf(out)

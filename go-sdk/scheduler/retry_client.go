@@ -1,3 +1,4 @@
+// Package scheduler provides retry functionality for the scheduler client.
 package scheduler
 
 import (

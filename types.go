@@ -11,13 +11,6 @@ import (
 // TaskStatus 任务状态
 type TaskStatus string
 
-const (
-	TaskStatusPending    TaskStatus = "pending"
-	TaskStatusProcessing TaskStatus = "processing"
-	TaskStatusDone       TaskStatus = "done"
-	TaskStatusError      TaskStatus = "error"
-)
-
 type Task struct {
 	ID      string
 	Method  string

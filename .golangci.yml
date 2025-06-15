@@ -42,6 +42,15 @@ linters-settings:
       - octalLiteral
       - whyNoLint
       - wrapperFunc
+  depguard:
+    rules:
+      Main:
+        allow:
+          - $gostd
+          - github.com/google/uuid
+          - github.com/gorilla/websocket
+          - github.com/go-enols/go-server/go-sdk/scheduler
+          - github.com/go-enols/go-log
 
 linters:
   # please, do not use `enable-all`: it's deprecated and will be removed soon.

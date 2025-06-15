@@ -1,3 +1,4 @@
+// Package scheduler provides client functionality for communicating with the distributed task scheduler.
 package scheduler
 
 import (
@@ -6,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"time"
 )
@@ -24,20 +26,20 @@ func NewSchedulerClient(baseURL string) *Client {
 	}
 }
 
-// 任务执行请求
+// ExecuteRequest represents a task execution request.
 type ExecuteRequest struct {
 	Method string      `json:"method"`
 	Params interface{} `json:"params"`
 }
 
-// 任务结果响应
+// ResultResponse represents a task result response.
 type ResultResponse struct {
 	TaskID string          `json:"taskId"`
 	Status string          `json:"status"`
 	Result json.RawMessage `json:"result"`
 }
 
-// 执行任务
+// Execute executes a task with the given method and parameters.
 func (c *Client) Execute(method string, params interface{}) (*ResultResponse, error) {
 	requestBody, err := json.Marshal(ExecuteRequest{
 		Method: method,
@@ -55,7 +57,11 @@ func (c *Client) Execute(method string, params interface{}) (*ResultResponse, er
 	if err != nil {
 		return nil, fmt.Errorf("HTTP request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			log.Printf("Failed to close response body: %v", closeErr)
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
@@ -70,13 +76,17 @@ func (c *Client) Execute(method string, params interface{}) (*ResultResponse, er
 	return &response, nil
 }
 
-// 获取任务结果
+// GetResult retrieves the result of a task by its ID.
 func (c *Client) GetResult(taskID string) (*ResultResponse, error) {
 	resp, err := c.httpClient.Get(c.baseURL + "/api/result/" + taskID)
 	if err != nil {
 		return nil, fmt.Errorf("HTTP request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			log.Printf("Failed to close response body: %v", closeErr)
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
