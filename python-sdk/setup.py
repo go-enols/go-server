@@ -21,7 +21,7 @@ requirements = [
 
 setup(
     name="go-server-sdk",
-    version="1.4.1",
+    version="1.4.2",
     author="enols",
     author_email="2575169674@qq.com",
     description="Python SDK for go-server distributed task scheduling system",

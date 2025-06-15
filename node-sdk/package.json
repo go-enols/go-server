@@ -1,6 +1,6 @@
 {
   "name": "go-server-sdk",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "description": "Node.js SDK for go-server distributed task scheduler and worker system",
   "main": "index.js",
   "types": "types/index.d.ts",
@@ -24,7 +24,7 @@
   "license": "MIT",
   "dependencies": {
     "axios": "^1.6.0",
-    "go-server-sdk": "^1.4.1",
+    "go-server-sdk": "^1.4.2",
     "ws": "^8.14.0"
   },
   "devDependencies": {
