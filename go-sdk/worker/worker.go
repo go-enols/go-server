@@ -1,4 +1,4 @@
-package workersdk
+package worker
 
 import (
 	"encoding/json"

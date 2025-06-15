@@ -2,6 +2,7 @@ package goserver
 
 import (
 	"encoding/json"
+	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -31,15 +32,16 @@ type Worker struct {
 	ID       string
 	Conn     *websocket.Conn
 	Methods  []MethodInfo
-	LastPing time.Time
-	Count    int
+	LastPing int64      // 使用原子操作，存储Unix纳秒时间戳
+	Count    int64      // 使用原子操作
+	ConnMu   sync.Mutex // 保护websocket连接的并发写入
 }
 
 type WorkerInfo struct {
 	ID       string       `json:"id"`
 	Methods  []MethodInfo `json:"methods"`
 	LastPing time.Time    `json:"lastPing"`
-	Count    int          `json:"count"`
+	Count    int64        `json:"count"`
 }
 
 type MethodInfo struct {

@@ -1,4 +1,4 @@
-const SchedulerClient = require('../schedulersdk/client');
+const SchedulerClient = require('../scheduler/client');
 
 /**
  * 简单的RPC调用函数

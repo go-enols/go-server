@@ -13,7 +13,7 @@ from typing import Dict, Any
 # Add the parent directory to the path so we can import the SDK
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from workersdk import Worker, Config
+from worker import Worker, Config
 
 # Setup logging
 logging.basicConfig(

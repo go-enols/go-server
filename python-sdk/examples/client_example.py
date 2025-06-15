@@ -7,8 +7,8 @@ import os
 # Add the parent directory to the path so we can import the SDK
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from schedulersdk import SchedulerClient, RetryClient
-from workersdk import call, call_async, get_result
+from scheduler import SchedulerClient, RetryClient
+from worker import call, call_async, get_result
 import time
 
 

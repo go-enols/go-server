@@ -205,6 +205,359 @@
         .method-debug-btn:hover {
             background: #138496;
         }
+        .method-toggle-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 3px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.7em;
+            margin-left: 10px;
+        }
+        .method-toggle-btn:hover {
+            background: #5a6268;
+        }
+        .method-docs {
+            color: #6c757d;
+            font-size: 0.9em;
+            line-height: 1.4;
+            display: none;
+            margin-top: 8px;
+        }
+        .method-docs.expanded {
+            display: block;
+        }
+        
+        /* 选项卡样式 */
+        .tab-nav {
+            display: flex;
+            border-bottom: 2px solid #e9ecef;
+            margin-bottom: 20px;
+        }
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 12px 20px;
+            cursor: pointer;
+            font-size: 1em;
+            color: #6c757d;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+        .tab-btn:hover {
+            color: #495057;
+            background: #f8f9fa;
+        }
+        .tab-btn.active {
+            color: #007bff;
+            border-bottom-color: #007bff;
+            background: #f8f9fa;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .form-help {
+            display: block;
+            margin-top: 5px;
+            color: #6c757d;
+            font-size: 0.85em;
+        }
+        .json-input-container {
+            position: relative;
+        }
+        .json-tools {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .json-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.2s;
+        }
+        .json-btn:hover {
+            background: #5a6268;
+        }
+        .json-preview {
+            margin-top: 10px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            background: #f8f9fa;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .json-preview-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        .json-preview-table th,
+        .json-preview-table td {
+            padding: 8px 12px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .json-preview-table th {
+            background: #e9ecef;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+        }
+        .json-preview-table tr:hover {
+            background: #f1f3f4;
+        }
+        .json-key {
+            font-family: 'Courier New', monospace;
+            color: #0066cc;
+            font-weight: bold;
+        }
+        .json-value {
+            font-family: 'Courier New', monospace;
+            word-break: break-all;
+        }
+        .json-type {
+            font-size: 11px;
+            color: #6c757d;
+            font-style: italic;
+        }
+        .json-error {
+            color: #dc3545;
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        /* 任务表格样式 */
+        .tasks-table-container {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            overflow: hidden;
+            background: white;
+        }
+        
+        .tasks-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0;
+        }
+        
+        .tasks-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            padding: 12px;
+            text-align: left;
+            border-bottom: 2px solid #dee2e6;
+        }
+        
+        .tasks-table td {
+            padding: 12px;
+            border-bottom: 1px solid #dee2e6;
+            vertical-align: top;
+        }
+        
+        .tasks-table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .task-method {
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+            color: #007bff;
+            background-color: #e7f3ff;
+            padding: 4px 8px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+        
+        .task-params {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #495057;
+            background-color: #f8f9fa;
+            padding: 8px;
+            border-radius: 4px;
+            max-height: 100px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        
+        .task-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .task-btn {
+            padding: 4px 8px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: all 0.2s;
+        }
+        
+        .task-btn.edit {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        
+        .task-btn.edit:hover {
+            background-color: #e0a800;
+        }
+        
+        .task-btn.delete {
+            background-color: #dc3545;
+            color: white;
+        }
+        
+        .task-btn.delete:hover {
+            background-color: #c82333;
+        }
+        
+        /* 弹框样式 */
+        .modal {
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .modal-header h3 {
+            margin: 0;
+            color: #495057;
+        }
+        
+        .close {
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #aaa;
+            transition: color 0.2s;
+        }
+        
+        .close:hover {
+            color: #000;
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+        
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 20px;
+            border-top: 1px solid #dee2e6;
+            background-color: #f8f9fa;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+        
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #545b62;
+        }
+        
+        #taskMethodSelect {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        /* 导出按钮样式 */
+        .export-buttons {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .export-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .export-btn:hover {
+            background: #218838;
+            transform: translateY(-1px);
+        }
+        
+        .export-btn:active {
+            transform: translateY(0);
+        }
+        
+        .retry-btn {
+            background: #fd7e14 !important;
+        }
+        
+        .retry-btn:hover {
+            background: #e8681a !important;
+        }
+
     </style>
 </head>
 <body>
@@ -235,35 +588,209 @@
             <div class="section">
                 <h2>📋 Worker列表和注册方法</h2>
                 <div id="workersContainer">
-                    <div class="no-data">正在加载数据...</div>
                 </div>
             </div>
             
             <div class="debug-section">
                 <h2>🔧 方法调试工具</h2>
-                <div class="debug-form">
-                    <div class="form-group">
-                        <label for="methodSelect">选择方法:</label>
-                        <select id="methodSelect">
-                            <option value="">请先选择一个方法</option>
-                        </select>
+                
+                <!-- 选项卡导航 -->
+                <div class="tab-nav">
+                    <button class="tab-btn active" onclick="switchTab('debug')">🐛 调试模式</button>
+                    <button class="tab-btn" onclick="switchTab('batch')">🚀 批量运行</button>
+                    <button class="tab-btn" onclick="switchTab('multiBatch')">🎯 多方法批量运行</button>
+                </div>
+                
+                <!-- 调试模式选项卡 -->
+                <div id="debugTab" class="tab-content active">
+                    <div class="debug-form">
+                        <div class="form-group">
+                            <label for="methodSelect">选择方法:</label>
+                            <select id="methodSelect">
+                                <option value="">请先选择一个方法</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="paramsInput">参数 (JSON格式):</label>
+                            <div class="json-input-container">
+                                <textarea id="paramsInput" placeholder='{"key": "value"}' oninput="autoFormatJSON('paramsInput')" onblur="autoFormatJSON('paramsInput')"></textarea>
+                                <div class="json-tools">
+                                    <button type="button" class="json-btn" onclick="toggleJSONPreview('paramsInput', 'paramsPreview')">👁️ 预览</button>
+                                </div>
+                            </div>
+                            <div id="paramsPreview" class="json-preview" style="display: none;"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="timeoutInput">超时时间 (秒):</label>
+                            <input type="number" id="timeoutInput" value="30" min="1" max="300">
+                        </div>
+                        <button class="execute-btn" onclick="executeMethod()" id="executeBtn">🚀 执行方法</button>
+                        <div id="resultArea" class="result-area" style="display: none;"></div>
+                        <div id="debugExportButtons" class="export-buttons" style="display: none;">
+                            <button class="export-btn" onclick="exportDebugResult('success')">📥 导出成功</button>
+                            <button class="export-btn" onclick="exportDebugResult('failed')">📥 导出失败</button>
+                            <button class="export-btn" onclick="exportDebugResult('all')">📥 导出全部</button>
+                            <button class="export-btn retry-btn" onclick="retryFailedDebugTasks()">🔄 重新运行失败</button>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="paramsInput">参数 (JSON格式):</label>
-                        <textarea id="paramsInput" placeholder='{"key": "value"}'></textarea>
+                </div>
+                
+                <!-- 批量运行选项卡 -->
+                <div id="batchTab" class="tab-content">
+                    <div class="debug-form">
+                        <div class="form-group">
+                            <label for="batchMethodSelect">选择方法:</label>
+                            <select id="batchMethodSelect">
+                                <option value="">请先选择一个方法</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="batchParamsInput">参数列表 (JSON数组格式):</label>
+                            <div class="json-input-container">
+                                <textarea id="batchParamsInput" placeholder='[{"key": "value1"}, {"key": "value2"}, {"key": "value3"}]' oninput="autoFormatJSON('batchParamsInput')" onblur="autoFormatJSON('batchParamsInput')"></textarea>
+                                <div class="json-tools">
+                                    <button type="button" class="json-btn" onclick="toggleJSONPreview('batchParamsInput', 'batchParamsPreview')">👁️ 预览</button>
+                                </div>
+                            </div>
+                            <div id="batchParamsPreview" class="json-preview" style="display: none;"></div>
+                            <small class="form-help">每个数组元素代表一次方法调用的参数</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="batchTimeoutInput">单次超时时间 (秒):</label>
+                            <input type="number" id="batchTimeoutInput" value="30" min="1" max="300">
+                        </div>
+                        <div class="form-group">
+                            <label for="concurrencyInput">并发数:</label>
+                            <input type="number" id="concurrencyInput" value="1" min="1" max="10">
+                            <small class="form-help">同时执行的任务数量</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="intervalInput">执行间隔 (毫秒):</label>
+                            <input type="text" id="intervalInput" placeholder="例如: 1000 或 500-2000" value="0">
+                            <small class="form-help">固定间隔(如1000)或随机范围(如500-2000)，0表示无间隔</small>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="randomOrderInput"> 随机运行顺序
+                            </label>
+                            <small class="form-help">勾选后将随机选择参数执行，不重复直到全部完成</small>
+                        </div>
+                        <button class="execute-btn" onclick="executeBatchMethod()" id="batchExecuteBtn">🚀 批量执行</button>
+                        <div id="batchResultArea" class="result-area" style="display: none;"></div>
+                        <div id="batchExportButtons" class="export-buttons" style="display: none;">
+                            <button class="export-btn" onclick="exportBatchResult('success')">📥 导出成功</button>
+                            <button class="export-btn" onclick="exportBatchResult('failed')">📥 导出失败</button>
+                            <button class="export-btn" onclick="exportBatchResult('all')">📥 导出全部</button>
+                            <button class="export-btn retry-btn" onclick="retryFailedBatchTasks()">🔄 重新运行失败</button>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="timeoutInput">超时时间 (秒):</label>
-                        <input type="number" id="timeoutInput" value="30" min="1" max="300">
+                </div>
+                
+                <!-- 多方法批量运行选项卡 -->
+                <div id="multiBatchTab" class="tab-content">
+                    <div class="debug-form">
+                        <div class="form-group">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                <label>任务配置:</label>
+                                <button type="button" class="json-btn" onclick="showAddTaskModal()">➕ 添加任务</button>
+                            </div>
+                            <div id="multiBatchTasksTable" class="tasks-table-container">
+                                <table class="tasks-table">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 60px;">#</th>
+                                            <th style="width: 150px;">方法</th>
+                                            <th>参数</th>
+                                            <th style="width: 120px;">操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="multiBatchTasksTableBody">
+                                        <tr class="no-tasks-row">
+                                            <td colspan="4" style="text-align: center; color: #6c757d; font-style: italic; padding: 20px;">暂无任务，点击"添加任务"开始配置</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <small class="form-help">配置多个不同方法的批量执行任务</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="multiBatchTimeoutInput">单次超时时间 (秒):</label>
+                            <input type="number" id="multiBatchTimeoutInput" value="30" min="1" max="300">
+                        </div>
+                        <div class="form-group">
+                            <label for="multiBatchConcurrencyInput">并发数:</label>
+                            <input type="number" id="multiBatchConcurrencyInput" value="1" min="1" max="10">
+                            <small class="form-help">同时执行的任务数量</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="multiBatchIntervalInput">执行间隔 (毫秒):</label>
+                            <input type="text" id="multiBatchIntervalInput" placeholder="例如: 1000 或 500-2000" value="0">
+                            <small class="form-help">固定间隔(如1000)或随机范围(如500-2000)，0表示无间隔</small>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="multiBatchRandomOrderInput"> 随机运行顺序
+                            </label>
+                            <small class="form-help">勾选后将随机选择任务执行，不重复直到全部完成</small>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="multiBatchGroupByMethodInput"> 按方法分组显示结果
+                            </label>
+                            <small class="form-help">勾选后结果将按方法名分组显示，便于查看</small>
+                        </div>
+                        <button class="execute-btn" onclick="executeMultiBatchMethod()" id="multiBatchExecuteBtn">🎯 多方法批量执行</button>
+                        <div id="multiBatchResultArea" class="result-area" style="display: none;"></div>
+                        <div id="multiBatchExportButtons" class="export-buttons" style="display: none;">
+                            <button class="export-btn" onclick="exportMultiBatchResult('success')">📥 导出成功</button>
+                            <button class="export-btn" onclick="exportMultiBatchResult('failed')">📥 导出失败</button>
+                            <button class="export-btn" onclick="exportMultiBatchResult('all')">📥 导出全部</button>
+                            <button class="export-btn retry-btn" onclick="retryFailedMultiBatchTasks()">🔄 重新运行失败</button>
+                        </div>
                     </div>
-                    <button class="execute-btn" onclick="executeMethod()" id="executeBtn">🚀 执行方法</button>
-                    <div id="resultArea" class="result-area" style="display: none;"></div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- 添加任务弹框 -->
+    <div id="addTaskModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">添加任务</h3>
+                <span class="close" onclick="closeAddTaskModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="taskMethodSelect">选择方法:</label>
+                    <select id="taskMethodSelect" onchange="updateTaskParamsInput()">
+                        <option value="">请选择方法</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="taskParamsInput">参数列表 (JSON数组格式):</label>
+                    <div class="json-input-container">
+                        <textarea id="taskParamsInput" placeholder='[{"key": "value1"}, {"key": "value2"}, {"key": "value3"}]' rows="6"></textarea>
+                        <div class="json-tools">
+                            <button type="button" class="json-btn" onclick="formatTaskParams()">🔧 格式化</button>
+                            <button type="button" class="json-btn" onclick="toggleTaskParamsPreview()">👁️ 预览</button>
+                        </div>
+                    </div>
+                    <div id="taskParamsPreview" class="json-preview" style="display: none;"></div>
+                    <small class="form-help">每个数组元素代表一次方法调用的参数，支持单个方法多个参数组合</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeAddTaskModal()">取消</button>
+                <button type="button" class="btn btn-primary" onclick="saveTask()" id="saveTaskBtn">保存</button>
+            </div>
+        </div>
+    </div>
+
     <script>
+        // 全局变量
+        let multiBatchTasks = []; // 存储多方法批量运行的任务列表
+        
         function loadData() {
             fetch('/api/status')
                 .then(response => response.json())
@@ -304,26 +831,121 @@
             });
             updateMethodSelect(allMethods);
 
-            let html = '';
-            workers.forEach(function(worker) {
-                html += '<div class="worker-card">';
-                html += '<div class="worker-header">';
-                html += '<span class="worker-id">Worker ID: ' + worker.id + '</span>';
-                html += '<span class="worker-status">在线</span>';
-                html += '<div style="clear: both; margin-top: 10px; color: #6c757d; font-size: 0.9em;">';
-                html += '最后心跳: ' + new Date(worker.lastPing).toLocaleString();
-                html += ' | 任务数: ' + worker.count;
+            // 获取现有的worker卡片
+            const existingCards = container.querySelectorAll('.worker-card');
+            const existingWorkerIds = Array.from(existingCards).map(card => {
+                const workerIdSpan = card.querySelector('.worker-id');
+                return workerIdSpan ? workerIdSpan.textContent.replace('Worker ID: ', '') : null;
+            }).filter(id => id !== null);
+            
+            // 创建worker ID到数据的映射
+            const workerMap = {};
+            workers.forEach(worker => {
+                workerMap[worker.id] = worker;
+            });
+            
+            // 更新现有的worker卡片
+            existingCards.forEach(card => {
+                const workerIdSpan = card.querySelector('.worker-id');
+                if (workerIdSpan) {
+                    const workerId = workerIdSpan.textContent.replace('Worker ID: ', '');
+                    const workerData = workerMap[workerId];
+                    
+                    if (workerData) {
+                        // 更新现有worker的信息
+                        updateWorkerCard(card, workerData);
+                        // 从映射中移除已处理的worker
+                        delete workerMap[workerId];
+                    } else {
+                        // worker已离线，移除卡片
+                        card.remove();
+                    }
+                }
+            });
+            
+            // 添加新的worker卡片（保持在现有worker之后）
+            Object.values(workerMap).forEach(worker => {
+                const newCard = createWorkerCard(worker);
+                container.appendChild(newCard);
+            });
+        }
+        
+        function createWorkerCard(worker) {
+            const card = document.createElement('div');
+            card.className = 'worker-card';
+            
+            let html = '<div class="worker-header">';
+            html += '<span class="worker-id">Worker ID: ' + worker.id + '</span>';
+            html += '<span class="worker-status">在线</span>';
+            html += '<div style="clear: both; margin-top: 10px; color: #6c757d; font-size: 0.9em;">';
+            html += '最后心跳: ' + new Date(worker.lastPing).toLocaleString();
+            html += ' | 任务数: ' + worker.count;
+            html += '</div></div>';
+            html += '<div class="methods-list">';
+            
+            worker.methods.forEach(function(method, index) {
+                const methodId = 'method-' + worker.id + '-' + index;
+                html += '<div class="method-item">';
+                html += '<div class="method-name">';
+                html += '📌 ' + method.name;
+                html += '<button class="method-toggle-btn" onclick="toggleMethodDocs(\'' + methodId + '\')">';
+                html += '展开</button>';
+                html += '<button class="method-debug-btn" onclick="selectMethodForDebug(\'' + method.name + '\')">';
+                html += '🔧 调试</button>';
+                html += '</div>';
+                html += '<div class="method-docs" id="' + methodId + '">';
+                if (method.docs && method.docs.length > 0) {
+                    html += method.docs.join('<br>');
+                } else {
+                    html += '暂无文档说明';
+                }
                 html += '</div></div>';
-                html += '<div class="methods-list">';
+            });
+            
+            html += '</div>';
+            card.innerHTML = html;
+            return card;
+        }
+        
+        function updateWorkerCard(card, worker) {
+            // 更新worker状态信息
+            const statusDiv = card.querySelector('.worker-header > div');
+            if (statusDiv) {
+                statusDiv.innerHTML = '最后心跳: ' + new Date(worker.lastPing).toLocaleString() + ' | 任务数: ' + worker.count;
+            }
+            
+            // 更新方法列表
+            const methodsList = card.querySelector('.methods-list');
+            if (methodsList) {
+                // 保存当前展开状态
+                const expandedStates = {};
+                const existingDocs = methodsList.querySelectorAll('.method-docs');
+                existingDocs.forEach(doc => {
+                    if (doc.classList.contains('expanded')) {
+                        // 从ID中提取方法索引
+                        const idParts = doc.id.split('-');
+                        if (idParts.length >= 3) {
+                            const methodIndex = idParts[idParts.length - 1];
+                            expandedStates[methodIndex] = true;
+                        }
+                    }
+                });
                 
-                worker.methods.forEach(function(method) {
+                let html = '';
+                worker.methods.forEach(function(method, index) {
+                    const methodId = 'method-' + worker.id + '-' + index;
+                    const isExpanded = expandedStates[index.toString()];
+                    
                     html += '<div class="method-item">';
                     html += '<div class="method-name">';
                     html += '📌 ' + method.name;
+                    html += '<button class="method-toggle-btn" onclick="toggleMethodDocs(\'' + methodId + '\')">';
+                    html += isExpanded ? '隐藏' : '展开';
+                    html += '</button>';
                     html += '<button class="method-debug-btn" onclick="selectMethodForDebug(\'' + method.name + '\')">';
                     html += '🔧 调试</button>';
                     html += '</div>';
-                    html += '<div class="method-docs">';
+                    html += '<div class="method-docs' + (isExpanded ? ' expanded' : '') + '" id="' + methodId + '">';
                     if (method.docs && method.docs.length > 0) {
                         html += method.docs.join('<br>');
                     } else {
@@ -331,36 +953,62 @@
                     }
                     html += '</div></div>';
                 });
-                
-                html += '</div></div>';
-            });
-            
-            container.innerHTML = html;
+                methodsList.innerHTML = html;
+            }
         }
 
         function updateMethodSelect(methods) {
             const select = document.getElementById('methodSelect');
+            const batchSelect = document.getElementById('batchMethodSelect');
             const currentValue = select.value; // 保存当前选择的值
+            const currentBatchValue = batchSelect.value; // 保存当前批量选择的值
             
+            // 更新调试模式的方法选择
             select.innerHTML = '<option value="">请先选择一个方法</option>';
+            // 更新批量模式的方法选择
+            batchSelect.innerHTML = '<option value="">请先选择一个方法</option>';
             
             methods.forEach(function(method) {
                 const option = document.createElement('option');
                 option.value = method.name;
                 option.textContent = method.name;
                 select.appendChild(option);
+                
+                const batchOption = document.createElement('option');
+                batchOption.value = method.name;
+                batchOption.textContent = method.name;
+                batchSelect.appendChild(batchOption);
             });
             
             // 恢复之前选择的值（如果该方法仍然存在）
             if (currentValue && methods.find(m => m.name === currentValue)) {
                 select.value = currentValue;
             }
+            if (currentBatchValue && methods.find(m => m.name === currentBatchValue)) {
+                batchSelect.value = currentBatchValue;
+            }
+            
+            // 同时更新任务弹框中的方法选择器
+            updateTaskMethodSelect();
         }
         
         function selectMethodForDebug(methodName) {
             document.getElementById('methodSelect').value = methodName;
             // 滚动到调试区域
             document.querySelector('.debug-section').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function toggleMethodDocs(methodId) {
+            const docsElement = document.getElementById(methodId);
+            const toggleBtn = event.target;
+            
+            if (docsElement.classList.contains('expanded')) {
+                docsElement.classList.remove('expanded');
+                toggleBtn.textContent = '展开';
+            } else {
+                docsElement.classList.add('expanded');
+                toggleBtn.textContent = '隐藏';
+            }
         }
         
         function executeMethod() {
@@ -444,11 +1092,42 @@
                             executeBtn.textContent = '🚀 执行方法';
                             resultArea.className = 'result-area result-success';
                             resultArea.textContent = '✅ 执行成功:\n' + JSON.stringify(data.result, null, 2);
+                            
+                            // 保存调试结果
+                            const methodName = document.getElementById('methodSelect').value;
+                            const params = JSON.parse(document.getElementById('paramsInput').value);
+                            debugResults.push({
+                                timestamp: new Date().toISOString(),
+                                method: methodName,
+                                params: params,
+                                result: data.result,
+                                success: true,
+                                taskId: taskId
+                            });
+                            
+                            // 显示导出按钮
+                            document.getElementById('debugExportButtons').style.display = 'flex';
                         } else if (data.status === 'error') {
                             executeBtn.disabled = false;
                             executeBtn.textContent = '🚀 执行方法';
                             resultArea.className = 'result-area result-error';
                             resultArea.textContent = '❌ 执行失败:\n' + JSON.stringify(data.result, null, 2);
+                            
+                            // 保存调试结果
+                            const methodName = document.getElementById('methodSelect').value;
+                            const params = JSON.parse(document.getElementById('paramsInput').value);
+                            debugResults.push({
+                                timestamp: new Date().toISOString(),
+                                method: methodName,
+                                params: params,
+                                result: data.result,
+                                success: false,
+                                taskId: taskId,
+                                error: data.result
+                            });
+                            
+                            // 显示导出按钮
+                            document.getElementById('debugExportButtons').style.display = 'flex';
                         } else {
                             // 任务还在处理中，继续轮询
                             setTimeout(poll, pollInterval);
@@ -463,6 +1142,1214 @@
             }
             
             poll();
+        }
+        
+        // 选项卡切换功能
+        function switchTab(tabName) {
+            // 移除所有选项卡按钮的active类
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // 隐藏所有选项卡内容
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // 激活当前选项卡
+            event.target.classList.add('active');
+            document.getElementById(tabName + 'Tab').classList.add('active');
+        }
+        
+        // 批量执行方法
+        function executeBatchMethod() {
+            const methodName = document.getElementById('batchMethodSelect').value;
+            const paramsText = document.getElementById('batchParamsInput').value;
+            const timeout = parseInt(document.getElementById('batchTimeoutInput').value);
+            const concurrency = parseInt(document.getElementById('concurrencyInput').value);
+            const intervalText = document.getElementById('intervalInput').value.trim();
+            const randomOrder = document.getElementById('randomOrderInput').checked;
+            const resultArea = document.getElementById('batchResultArea');
+            const executeBtn = document.getElementById('batchExecuteBtn');
+            
+            if (!methodName) {
+                alert('请先选择一个方法');
+                return;
+            }
+            
+            let paramsList;
+            try {
+                paramsList = paramsText ? JSON.parse(paramsText) : [];
+                if (!Array.isArray(paramsList)) {
+                    throw new Error('参数必须是数组格式');
+                }
+            } catch (e) {
+                alert('参数格式错误，请输入有效的JSON数组格式');
+                return;
+            }
+            
+            if (paramsList.length === 0) {
+                alert('参数列表不能为空');
+                return;
+            }
+            
+            // 解析执行间隔
+            let intervalConfig = { type: 'fixed', value: 0 };
+            if (intervalText && intervalText !== '0') {
+                if (intervalText.includes('-')) {
+                    const parts = intervalText.split('-');
+                    if (parts.length === 2) {
+                        const min = parseInt(parts[0].trim());
+                        const max = parseInt(parts[1].trim());
+                        if (!isNaN(min) && !isNaN(max) && min >= 0 && max >= min) {
+                            intervalConfig = { type: 'random', min: min, max: max };
+                        } else {
+                            alert('间隔范围格式错误，请使用如 "500-2000" 的格式');
+                            return;
+                        }
+                    } else {
+                        alert('间隔范围格式错误，请使用如 "500-2000" 的格式');
+                        return;
+                    }
+                } else {
+                    const fixedInterval = parseInt(intervalText);
+                    if (!isNaN(fixedInterval) && fixedInterval >= 0) {
+                        intervalConfig = { type: 'fixed', value: fixedInterval };
+                    } else {
+                        alert('固定间隔必须是非负整数');
+                        return;
+                    }
+                }
+            }
+            
+            executeBtn.disabled = true;
+            executeBtn.textContent = '⏳ 批量执行中...';
+            resultArea.style.display = 'block';
+            resultArea.className = 'result-area';
+            
+            const intervalInfo = intervalConfig.type === 'fixed' ? 
+                (intervalConfig.value > 0 ? `${intervalConfig.value}毫秒` : '无间隔') :
+                `${intervalConfig.min}-${intervalConfig.max}毫秒随机`;
+            
+            resultArea.innerHTML = `
+                <div>正在批量执行方法: ${methodName}</div>
+                <div>总任务数: ${paramsList.length}</div>
+                <div>并发数: ${concurrency}</div>
+                <div>单次超时: ${timeout}秒</div>
+                <div>执行间隔: ${intervalInfo}</div>
+                <div>执行顺序: ${randomOrder ? '随机' : '顺序'}</div>
+                <hr>
+                <div id="batchProgress">准备执行...</div>
+                <div id="batchResults"></div>
+            `;
+            
+            executeBatchTasks(methodName, paramsList, timeout, concurrency, intervalConfig, randomOrder, executeBtn, resultArea);
+        }
+        
+        // 批量执行任务的核心逻辑
+        async function executeBatchTasks(methodName, paramsList, timeout, concurrency, intervalConfig, randomOrder, executeBtn, resultArea) {
+            const progressDiv = document.getElementById('batchProgress');
+            const resultsDiv = document.getElementById('batchResults');
+            const results = [];
+            let completed = 0;
+            let failed = 0;
+            let executionCounter = 0; // 执行计数器，用于记录执行顺序
+            
+            // 准备执行顺序
+            let executionOrder;
+            if (randomOrder) {
+                // 创建随机顺序的索引数组
+                executionOrder = Array.from({length: paramsList.length}, (_, i) => i);
+                // Fisher-Yates 洗牌算法
+                for (let i = executionOrder.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [executionOrder[i], executionOrder[j]] = [executionOrder[j], executionOrder[i]];
+                }
+                console.log(executionOrder)
+            } else {
+                // 顺序执行
+                executionOrder = Array.from({length: paramsList.length}, (_, i) => i);
+            }
+            
+            // 获取执行间隔的函数
+            function getInterval() {
+                if (intervalConfig.type === 'fixed') {
+                    return intervalConfig.value;
+                } else {
+                    return Math.floor(Math.random() * (intervalConfig.max - intervalConfig.min + 1)) + intervalConfig.min;
+                }
+            }
+            
+            // 分批执行任务
+            for (let i = 0; i < executionOrder.length; i += concurrency) {
+                const batchIndices = executionOrder.slice(i, i + concurrency);
+                const batchPromises = batchIndices.map(async (originalIndex, batchIndex) => {
+                    const params = paramsList[originalIndex];
+                    
+                    try {
+                        // 如果不是第一个任务，需要等待间隔
+                        if (i + batchIndex > 0) {
+                            const interval = getInterval();
+                            if (interval > 0) {
+                                progressDiv.innerHTML = `等待 ${interval}ms 后执行第 ${originalIndex + 1}/${paramsList.length} 个任务...`;
+                                await new Promise(resolve => setTimeout(resolve, interval));
+                            }
+                        }
+                        
+                        progressDiv.innerHTML = `正在执行第 ${originalIndex + 1}/${paramsList.length} 个任务... (${randomOrder ? '随机顺序' : '顺序执行'})`;
+                        console.log(params)
+                        // 提交任务
+                        const response = await fetch('/api/execute', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                method: methodName,
+                                params: params,
+                                timeout: timeout
+                            })
+                        });
+                        
+                        const data = await response.json();
+                        if (data.error) {
+                            throw new Error(data.error);
+                        }
+                        
+                        // 等待任务完成
+                        const result = await pollTaskResultAsync(data.taskId, timeout * 1000);
+                        
+                        completed++;
+                        const currentExecutionOrder = ++executionCounter;
+                        results[originalIndex] = {
+                            index: originalIndex,
+                            executionOrder: currentExecutionOrder,
+                            params: params,
+                            success: true,
+                            result: result
+                        };
+                        
+                        // 更新结果显示
+                        updateBatchResults(resultsDiv, results, completed, failed, paramsList.length);
+                        
+                    } catch (error) {
+                        failed++;
+                        const currentExecutionOrder = ++executionCounter;
+                        results[originalIndex] = {
+                            index: originalIndex,
+                            executionOrder: currentExecutionOrder,
+                            params: params,
+                            success: false,
+                            error: error.message
+                        };
+                        
+                        // 更新结果显示
+                        updateBatchResults(resultsDiv, results, completed, failed, paramsList.length);
+                    }
+                });
+                
+                // 等待当前批次完成
+                await Promise.all(batchPromises);
+            }
+            
+            // 执行完成
+            executeBtn.disabled = false;
+            executeBtn.textContent = '🚀 批量执行';
+            progressDiv.innerHTML = `✅ 批量执行完成！成功: ${completed}, 失败: ${failed}`;
+            
+            if (failed === 0) {
+                resultArea.className = 'result-area result-success';
+            } else if (completed === 0) {
+                resultArea.className = 'result-area result-error';
+            } else {
+                resultArea.className = 'result-area';
+            }
+        }
+        
+        // 异步轮询任务结果
+        function pollTaskResultAsync(taskId, timeoutMs) {
+            return new Promise((resolve, reject) => {
+                const startTime = Date.now();
+                const pollInterval = 500;
+                
+                function poll() {
+                    if (Date.now() - startTime > timeoutMs) {
+                        reject(new Error('任务执行超时'));
+                        return;
+                    }
+                    
+                    fetch('/api/result/' + taskId)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.status === 'done') {
+                                resolve(data.result);
+                            } else if (data.status === 'error') {
+                                reject(new Error(JSON.stringify(data.result)));
+                            } else {
+                                setTimeout(poll, pollInterval);
+                            }
+                        })
+                        .catch(error => {
+                            reject(error);
+                        });
+                }
+                
+                poll();
+            });
+        }
+        
+        // 更新批量执行结果显示
+        function updateBatchResults(resultsDiv, results, completed, failed, total) {
+            let html = `<div style="margin: 10px 0; font-weight: bold;">进度: ${completed + failed}/${total} (成功: ${completed}, 失败: ${failed})</div>`;
+            
+            // 过滤出已完成的结果并按执行顺序排序
+            const completedResults = results.filter(result => result !== undefined)
+                .sort((a, b) => a.executionOrder - b.executionOrder);
+            
+            completedResults.forEach((result) => {
+                html += `<div style="margin: 5px 0; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">`;
+                html += `<strong>执行顺序 ${result.executionOrder} (原始任务 ${result.index + 1}):</strong> `;
+                if (result.success) {
+                    html += `<span style="color: green;">✅ 成功</span><br>`;
+                    html += `<small>参数: ${JSON.stringify(result.params)}</small><br>`;
+                    html += `<small>结果: ${JSON.stringify(result.result)}</small>`;
+                } else {
+                    html += `<span style="color: red;">❌ 失败</span><br>`;
+                    html += `<small>参数: ${JSON.stringify(result.params)}</small><br>`;
+                    html += `<small>错误: ${result.error}</small>`;
+                }
+                html += `</div>`;
+            });
+            
+            resultsDiv.innerHTML = html;
+            
+            // 如果批量执行完成，保存结果数据并显示导出按钮
+            if (completed + failed === total) {
+                const methodName = document.getElementById('batchMethodSelect').value;
+                
+                // 清空之前的批量结果
+                batchResults = [];
+                
+                // 保存所有结果
+                completedResults.forEach(result => {
+                    batchResults.push({
+                        timestamp: new Date().toISOString(),
+                        method: methodName,
+                        params: result.params,
+                        result: result.result,
+                        success: result.success,
+                        executionOrder: result.executionOrder,
+                        originalIndex: result.index,
+                        error: result.error || null
+                    });
+                });
+                
+                // 显示导出按钮
+                document.getElementById('batchExportButtons').style.display = 'flex';
+            }
+        }
+        
+        // 防抖定时器
+        let formatTimers = {};
+        
+        // 自动JSON格式化功能
+        function autoFormatJSON(textareaId) {
+            // 清除之前的定时器
+            if (formatTimers[textareaId]) {
+                clearTimeout(formatTimers[textareaId]);
+            }
+            
+            // 设置新的定时器，1秒后执行格式化
+            formatTimers[textareaId] = setTimeout(() => {
+                const textarea = document.getElementById(textareaId);
+                const value = textarea.value.trim();
+                
+                if (!value) {
+                    return;
+                }
+                
+                try {
+                    const parsed = JSON.parse(value);
+                    const formatted = JSON.stringify(parsed, null, 2);
+                    if (textarea.value !== formatted) {
+                        const cursorPos = textarea.selectionStart;
+                        textarea.value = formatted;
+                        // 尝试保持光标位置
+                        textarea.setSelectionRange(cursorPos, cursorPos);
+                    }
+                } catch (error) {
+                    // 静默处理错误，不显示弹窗
+                }
+            }, 1000);
+        }
+        
+        // JSON预览功能
+        function toggleJSONPreview(textareaId, previewId) {
+            const textarea = document.getElementById(textareaId);
+            const preview = document.getElementById(previewId);
+            
+            if (preview.style.display === 'none') {
+                // 显示预览
+                const value = textarea.value.trim();
+                if (!value) {
+                    alert('请先输入JSON内容');
+                    return;
+                }
+                
+                try {
+                    const parsed = JSON.parse(value);
+                    const isBatch = textareaId.includes('batch');
+                    const isMultiBatch = textareaId === 'multiBatchTasksInput';
+                    preview.innerHTML = generateJSONPreview(parsed, isBatch, isMultiBatch);
+                    preview.style.display = 'block';
+                } catch (error) {
+                    preview.innerHTML = '<div class="json-error">JSON格式错误: ' + error.message + '</div>';
+                    preview.style.display = 'block';
+                }
+            } else {
+                // 隐藏预览
+                preview.style.display = 'none';
+            }
+        }
+        
+
+        
+        // 生成JSON预览表格
+        function generateJSONPreview(data, isBatch, isMultiBatch) {
+            if (isMultiBatch && Array.isArray(data)) {
+                // 多方法批量模式：显示任务配置预览
+                let html = '<div style="padding: 10px;"><strong>多方法任务配置预览 (共 ' + data.length + ' 个任务)</strong></div>';
+                
+                // 统计方法分布
+                const methodStats = {};
+                data.forEach(task => {
+                    if (task.method) {
+                        methodStats[task.method] = (methodStats[task.method] || 0) + 1;
+                    }
+                });
+                
+                if (Object.keys(methodStats).length > 0) {
+                    html += '<div style="padding: 10px; background: #e7f3ff; border-radius: 4px; margin: 10px;">';
+                    html += '<strong>方法分布统计:</strong><br>';
+                    Object.entries(methodStats).forEach(([method, count]) => {
+                        html += `<span style="margin-right: 15px;">📌 ${method}: ${count}次</span>`;
+                    });
+                    html += '</div>';
+                }
+                
+                data.forEach((task, index) => {
+                    html += '<div style="margin: 10px; padding: 10px; border: 1px solid #dee2e6; border-radius: 4px;">';
+                    html += '<div style="font-weight: bold; margin-bottom: 8px; color: #495057;">任务 ' + (index + 1) + ':</div>';
+                    
+                    if (typeof task === 'object' && task !== null) {
+                        // 特殊处理method和params字段
+                        if (task.method) {
+                            html += '<div style="margin-bottom: 5px;"><strong>方法:</strong> <span style="color: #007bff; font-family: monospace;">' + task.method + '</span></div>';
+                        }
+                        if (task.params !== undefined) {
+                            html += '<div style="margin-bottom: 5px;"><strong>参数:</strong></div>';
+                            if (typeof task.params === 'object' && task.params !== null && Object.keys(task.params).length > 0) {
+                                html += generateKeyValueTable(task.params);
+                            } else {
+                                html += '<div style="color: #6c757d; font-style: italic;">无参数或空对象</div>';
+                            }
+                        }
+                        
+                        // 显示其他字段
+                        const otherFields = Object.keys(task).filter(key => key !== 'method' && key !== 'params');
+                        if (otherFields.length > 0) {
+                            html += '<div style="margin-top: 10px;"><strong>其他字段:</strong></div>';
+                            const otherData = {};
+                            otherFields.forEach(key => {
+                                otherData[key] = task[key];
+                            });
+                            html += generateKeyValueTable(otherData);
+                        }
+                    } else {
+                        html += '<div class="json-value">值: ' + JSON.stringify(task) + ' <span class="json-type">(" + typeof task + ")</span></div>';
+                    }
+                    
+                    html += '</div>';
+                });
+                
+                return html;
+            } else if (isBatch && Array.isArray(data)) {
+                // 单方法批量模式：显示数组中每个对象的预览
+                let html = '<div style="padding: 10px;"><strong>批量参数预览 (共 ' + data.length + ' 组参数)</strong></div>';
+                
+                data.forEach((item, index) => {
+                    html += '<div style="margin: 10px; padding: 10px; border: 1px solid #dee2e6; border-radius: 4px;">';
+                    html += '<div style="font-weight: bold; margin-bottom: 8px; color: #495057;">参数组 ' + (index + 1) + ':</div>';
+                    
+                    if (typeof item === 'object' && item !== null) {
+                        html += generateKeyValueTable(item);
+                    } else {
+                        html += '<div class="json-value">值: ' + JSON.stringify(item) + ' <span class="json-type">(" + typeof item + ")</span></div>';
+                    }
+                    
+                    html += '</div>';
+                });
+                
+                return html;
+            } else {
+                // 单个模式：显示对象的key-value表格
+                if (typeof data === 'object' && data !== null) {
+                    return '<div style="padding: 10px;"><strong>参数预览:</strong></div>' + generateKeyValueTable(data);
+                } else {
+                    return '<div style="padding: 10px;"><div class="json-value">值: ' + JSON.stringify(data) + ' <span class="json-type">(" + typeof data + ")</span></div></div>';
+                }
+            }
+        }
+        
+        // 生成key-value表格
+        function generateKeyValueTable(obj) {
+            let html = '<table class="json-preview-table">';
+            html += '<thead><tr><th>键 (Key)</th><th>值 (Value)</th><th>类型</th></tr></thead>';
+            html += '<tbody>';
+            
+            function addRows(object, prefix = '') {
+                for (const [key, value] of Object.entries(object)) {
+                    const fullKey = prefix ? prefix + '.' + key : key;
+                    
+                    if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+                        // 嵌套对象
+                        html += '<tr>';
+                        html += '<td class="json-key">' + fullKey + '</td>';
+                        html += '<td class="json-value">{...} (嵌套对象)</td>';
+                        html += '<td class="json-type">object</td>';
+                        html += '</tr>';
+                        addRows(value, fullKey);
+                    } else {
+                        html += '<tr>';
+                        html += '<td class="json-key">' + fullKey + '</td>';
+                        html += '<td class="json-value">' + JSON.stringify(value) + '</td>';
+                        html += '<td class="json-type">' + (Array.isArray(value) ? 'array' : typeof value) + '</td>';
+                        html += '</tr>';
+                    }
+                }
+            }
+            
+            addRows(obj);
+            html += '</tbody></table>';
+            return html;
+        }
+        
+        // 自动格式化JSON
+        function autoFormatJSON(inputId, previewId) {
+            const input = document.getElementById(inputId);
+            const preview = document.getElementById(previewId || inputId + 'Preview');
+            
+            try {
+                const data = JSON.parse(input.value);
+                input.value = JSON.stringify(data, null, 2);
+                
+                // 更新预览
+                const isBatch = inputId === 'batchParamsInput';
+                const isMultiBatch = inputId === 'multiBatchTasksInput';
+                if (preview) {
+                    preview.innerHTML = generateJSONPreview(data, isBatch, isMultiBatch);
+                    preview.style.display = 'block';
+                }
+            } catch (e) {
+                if (preview) {
+                    preview.innerHTML = '<div style="color: red; padding: 10px;">JSON格式错误: ' + e.message + '</div>';
+                    preview.style.display = 'block';
+                }
+            }
+        }
+        
+        // 切换JSON预览
+        function toggleJSONPreview(inputId, previewId) {
+            const input = document.getElementById(inputId);
+            const preview = document.getElementById(previewId);
+            
+            if (preview.style.display === 'none' || preview.style.display === '') {
+                try {
+                    const data = JSON.parse(input.value);
+                    const isBatch = inputId === 'batchParamsInput';
+                    const isMultiBatch = inputId === 'multiBatchTasksInput';
+                    preview.innerHTML = generateJSONPreview(data, isBatch, isMultiBatch);
+                    preview.style.display = 'block';
+                } catch (e) {
+                    preview.innerHTML = '<div style="color: red; padding: 10px;">JSON格式错误: ' + e.message + '</div>';
+                    preview.style.display = 'block';
+                }
+            } else {
+                preview.style.display = 'none';
+            }
+        }
+        
+        // 多方法批量运行JSON预览
+        function toggleMultiBatchTasksPreview() {
+            toggleJSONPreview('multiBatchTasksInput', 'multiBatchTasksPreview');
+        }
+        
+        // 多方法批量运行任务管理
+        let editingTaskIndex = -1;
+        
+        // 显示添加任务弹框
+        function showAddTaskModal() {
+            editingTaskIndex = -1;
+            document.getElementById('modalTitle').textContent = '添加任务';
+            document.getElementById('saveTaskBtn').textContent = '保存';
+            
+            // 重置表单
+            document.getElementById('taskMethodSelect').value = '';
+            document.getElementById('taskParamsInput').value = '[{}]';
+            document.getElementById('taskParamsPreview').style.display = 'none';
+            
+            // 更新方法选择器
+            updateTaskMethodSelect();
+            
+            document.getElementById('addTaskModal').style.display = 'flex';
+        }
+        
+        // 显示编辑任务弹框
+        function showEditTaskModal(index) {
+            editingTaskIndex = index;
+            const task = multiBatchTasks[index];
+            
+            document.getElementById('modalTitle').textContent = '编辑任务';
+            document.getElementById('saveTaskBtn').textContent = '更新';
+            
+            // 更新方法选择器
+            updateTaskMethodSelect();
+            
+            // 填充表单
+            document.getElementById('taskMethodSelect').value = task.method;
+            // 兼容旧格式（params）和新格式（paramsList）
+            const paramsToShow = task.paramsList || (task.params ? [task.params] : [{}]);
+            document.getElementById('taskParamsInput').value = JSON.stringify(paramsToShow, null, 2);
+            document.getElementById('taskParamsPreview').style.display = 'none';
+            
+            document.getElementById('addTaskModal').style.display = 'flex';
+        }
+        
+        // 关闭弹框
+        function closeAddTaskModal() {
+            document.getElementById('addTaskModal').style.display = 'none';
+            editingTaskIndex = -1;
+        }
+        
+        // 更新任务方法选择器
+        function updateTaskMethodSelect() {
+            const methodSelect = document.getElementById('methodSelect');
+            const taskMethodSelect = document.getElementById('taskMethodSelect');
+            const currentTaskValue = taskMethodSelect.value; // 保存当前选择的值
+            
+            // 清空选项
+            taskMethodSelect.innerHTML = '<option value="">请选择方法</option>';
+            
+            // 复制主方法选择器的选项
+            Array.from(methodSelect.options).forEach(option => {
+                if (option.value !== '') {
+                    const newOption = document.createElement('option');
+                    newOption.value = option.value;
+                    newOption.textContent = option.textContent;
+                    taskMethodSelect.appendChild(newOption);
+                }
+            });
+            
+            // 恢复之前选择的值（如果该方法仍然存在）
+            if (currentTaskValue && Array.from(taskMethodSelect.options).find(option => option.value === currentTaskValue)) {
+                taskMethodSelect.value = currentTaskValue;
+            }
+        }
+        
+        // 更新任务参数输入框
+        function updateTaskParamsInput() {
+            const methodSelect = document.getElementById('taskMethodSelect');
+            const paramsInput = document.getElementById('taskParamsInput');
+            
+            if (methodSelect.value && paramsInput.value.trim() === '{}') {
+                // 可以根据方法提供默认参数模板
+                paramsInput.value = '{}';
+            }
+        }
+        
+        // 格式化任务参数
+        function formatTaskParams() {
+            const input = document.getElementById('taskParamsInput');
+            try {
+                const data = JSON.parse(input.value);
+                input.value = JSON.stringify(data, null, 2);
+            } catch (e) {
+                alert('JSON格式错误: ' + e.message);
+            }
+        }
+        
+        // 切换任务参数预览
+        function toggleTaskParamsPreview() {
+            const input = document.getElementById('taskParamsInput');
+            const preview = document.getElementById('taskParamsPreview');
+            
+            if (preview.style.display === 'none' || preview.style.display === '') {
+                try {
+                    const data = JSON.parse(input.value);
+                    preview.innerHTML = generateJSONPreview(data, false, false);
+                    preview.style.display = 'block';
+                } catch (e) {
+                    preview.innerHTML = '<div style="color: red; padding: 10px;">JSON格式错误: ' + e.message + '</div>';
+                    preview.style.display = 'block';
+                }
+            } else {
+                preview.style.display = 'none';
+            }
+        }
+        
+        // 保存任务
+        function saveTask() {
+            const method = document.getElementById('taskMethodSelect').value;
+            const paramsText = document.getElementById('taskParamsInput').value;
+            
+            if (!method) {
+                alert('请选择方法');
+                return;
+            }
+            
+            let paramsList;
+            try {
+                paramsList = JSON.parse(paramsText);
+                if (!Array.isArray(paramsList)) {
+                    throw new Error('参数必须是数组格式');
+                }
+            } catch (e) {
+                alert('参数JSON格式错误: ' + e.message);
+                return;
+            }
+            
+            const task = { method, paramsList };
+            
+            if (editingTaskIndex >= 0) {
+                // 编辑模式
+                multiBatchTasks[editingTaskIndex] = task;
+            } else {
+                // 添加模式
+                multiBatchTasks.push(task);
+            }
+            
+            updateTasksTable();
+            closeAddTaskModal();
+        }
+        
+        // 删除任务
+        function deleteTask(index) {
+            if (confirm('确定要删除这个任务吗？')) {
+                multiBatchTasks.splice(index, 1);
+                updateTasksTable();
+            }
+        }
+        
+        // 更新任务表格
+        function updateTasksTable() {
+            const tbody = document.getElementById('multiBatchTasksTableBody');
+            
+            if (multiBatchTasks.length === 0) {
+                tbody.innerHTML = '<tr class="no-tasks-row"><td colspan="4" style="text-align: center; color: #6c757d; font-style: italic; padding: 20px;">暂无任务，点击"添加任务"开始配置</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = multiBatchTasks.map((task, index) => {
+                // 兼容旧格式（params）和新格式（paramsList）
+                const paramsList = task.paramsList || (task.params ? [task.params] : [{}]);
+                const paramsCount = paramsList.length;
+                const paramsDisplay = paramsCount === 0 
+                    ? '<span style="color: #6c757d; font-style: italic;">无参数</span>'
+                    : `<div style="font-size: 0.9em; color: #495057;"><strong>${paramsCount}个参数组合</strong></div><div style="max-height: 100px; overflow-y: auto; font-size: 0.8em; color: #6c757d; margin-top: 5px;">${JSON.stringify(paramsList, null, 2)}</div>`;
+                
+                return `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td><span class="task-method">${task.method}</span></td>
+                        <td><div class="task-params">${paramsDisplay}</div></td>
+                        <td>
+                            <div class="task-actions">
+                                <button class="task-btn edit" onclick="showEditTaskModal(${index})">✏️ 编辑</button>
+                                <button class="task-btn delete" onclick="deleteTask(${index})">🗑️ 删除</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        // 多方法批量执行
+        function executeMultiBatchMethod() {
+            const timeout = parseInt(document.getElementById('multiBatchTimeoutInput').value);
+            const concurrency = parseInt(document.getElementById('multiBatchConcurrencyInput').value);
+            const intervalText = document.getElementById('multiBatchIntervalInput').value.trim();
+            const randomOrder = document.getElementById('multiBatchRandomOrderInput').checked;
+            const groupByMethod = document.getElementById('multiBatchGroupByMethodInput').checked;
+            const resultArea = document.getElementById('multiBatchResultArea');
+            const executeBtn = document.getElementById('multiBatchExecuteBtn');
+            
+            // 使用表格中的任务配置
+            const taskConfigs = [...multiBatchTasks]; // 创建副本
+            
+            if (taskConfigs.length === 0) {
+                alert('请先添加至少一个任务');
+                return;
+            }
+            
+            // 将任务配置展开为具体的执行任务列表
+            const tasksList = [];
+            taskConfigs.forEach(taskConfig => {
+                const method = taskConfig.method;
+                // 兼容旧格式（params）和新格式（paramsList）
+                const paramsList = taskConfig.paramsList || (taskConfig.params ? [taskConfig.params] : [{}]);
+                
+                paramsList.forEach(params => {
+                    tasksList.push({ method, params });
+                });
+            });
+            
+            if (tasksList.length === 0) {
+                 alert('任务配置中没有有效的参数');
+                 return;
+             }
+            
+            // 解析执行间隔
+            let intervalConfig = { type: 'fixed', value: 0 };
+            if (intervalText && intervalText !== '0') {
+                if (intervalText.includes('-')) {
+                    const parts = intervalText.split('-');
+                    if (parts.length === 2) {
+                        const min = parseInt(parts[0].trim());
+                        const max = parseInt(parts[1].trim());
+                        if (!isNaN(min) && !isNaN(max) && min >= 0 && max >= min) {
+                            intervalConfig = { type: 'random', min: min, max: max };
+                        } else {
+                            alert('间隔范围格式错误，请使用如 "500-2000" 的格式');
+                            return;
+                        }
+                    } else {
+                        alert('间隔范围格式错误，请使用如 "500-2000" 的格式');
+                        return;
+                    }
+                } else {
+                    const fixedInterval = parseInt(intervalText);
+                    if (!isNaN(fixedInterval) && fixedInterval >= 0) {
+                        intervalConfig = { type: 'fixed', value: fixedInterval };
+                    } else {
+                        alert('固定间隔必须是非负整数');
+                        return;
+                    }
+                }
+            }
+            
+            executeBtn.disabled = true;
+            executeBtn.textContent = '⏳ 多方法批量执行中...';
+            resultArea.style.display = 'block';
+            resultArea.className = 'result-area';
+            
+            const intervalInfo = intervalConfig.type === 'fixed' ? 
+                (intervalConfig.value > 0 ? `${intervalConfig.value}毫秒` : '无间隔') :
+                `${intervalConfig.min}-${intervalConfig.max}毫秒随机`;
+            
+            // 统计方法分布
+            const methodStats = {};
+            tasksList.forEach(task => {
+                methodStats[task.method] = (methodStats[task.method] || 0) + 1;
+            });
+            
+            const methodStatsText = Object.entries(methodStats)
+                .map(([method, count]) => `${method}(${count}次)`)
+                .join(', ');
+            
+            resultArea.innerHTML = `
+                <div>正在执行多方法批量任务</div>
+                <div>总任务数: ${tasksList.length}</div>
+                <div>涉及方法: ${methodStatsText}</div>
+                <div>并发数: ${concurrency}</div>
+                <div>单次超时: ${timeout}秒</div>
+                <div>执行间隔: ${intervalInfo}</div>
+                <div>执行顺序: ${randomOrder ? '随机' : '顺序'}</div>
+                <div>结果显示: ${groupByMethod ? '按方法分组' : '按执行顺序'}</div>
+                <hr>
+                <div id="multiBatchProgress">准备执行...</div>
+                <div id="multiBatchResults"></div>
+            `;
+            
+            executeMultiBatchTasks(tasksList, timeout, concurrency, intervalConfig, randomOrder, groupByMethod, executeBtn, resultArea);
+        }
+        
+        // 多方法批量执行任务的核心逻辑
+        async function executeMultiBatchTasks(tasksList, timeout, concurrency, intervalConfig, randomOrder, groupByMethod, executeBtn, resultArea) {
+            const progressDiv = document.getElementById('multiBatchProgress');
+            const resultsDiv = document.getElementById('multiBatchResults');
+            const results = [];
+            let completed = 0;
+            let failed = 0;
+            let executionCounter = 0;
+            
+            // 准备执行顺序
+            let executionOrder;
+            if (randomOrder) {
+                executionOrder = Array.from({length: tasksList.length}, (_, i) => i);
+                // Fisher-Yates 洗牌算法
+                for (let i = executionOrder.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [executionOrder[i], executionOrder[j]] = [executionOrder[j], executionOrder[i]];
+                }
+            } else {
+                executionOrder = Array.from({length: tasksList.length}, (_, i) => i);
+            }
+            
+            // 获取执行间隔的函数
+            function getInterval() {
+                if (intervalConfig.type === 'fixed') {
+                    return intervalConfig.value;
+                } else {
+                    return Math.floor(Math.random() * (intervalConfig.max - intervalConfig.min + 1)) + intervalConfig.min;
+                }
+            }
+            
+            // 分批执行任务
+            for (let i = 0; i < executionOrder.length; i += concurrency) {
+                const batchIndices = executionOrder.slice(i, i + concurrency);
+                const batchPromises = batchIndices.map(async (originalIndex, batchIndex) => {
+                    const task = tasksList[originalIndex];
+                    
+                    try {
+                        // 如果不是第一个任务，需要等待间隔
+                        if (i + batchIndex > 0) {
+                            const interval = getInterval();
+                            if (interval > 0) {
+                                progressDiv.innerHTML = `等待 ${interval}ms 后执行第 ${originalIndex + 1}/${tasksList.length} 个任务 (${task.method})...`;
+                                await new Promise(resolve => setTimeout(resolve, interval));
+                            }
+                        }
+                        
+                        progressDiv.innerHTML = `正在执行第 ${originalIndex + 1}/${tasksList.length} 个任务: ${task.method} (${randomOrder ? '随机顺序' : '顺序执行'})`;
+                        
+                        // 提交任务
+                        const response = await fetch('/api/execute', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                method: task.method,
+                                params: task.params,
+                                timeout: timeout
+                            })
+                        });
+                        
+                        const data = await response.json();
+                        if (data.error) {
+                            throw new Error(data.error);
+                        }
+                        
+                        // 等待任务完成
+                        const result = await pollTaskResultAsync(data.taskId, timeout * 1000);
+                        
+                        completed++;
+                        const currentExecutionOrder = ++executionCounter;
+                        results[originalIndex] = {
+                            index: originalIndex,
+                            executionOrder: currentExecutionOrder,
+                            method: task.method,
+                            params: task.params,
+                            success: true,
+                            result: result
+                        };
+                        
+                        // 更新结果显示
+                        updateMultiBatchResults(resultsDiv, results, completed, failed, tasksList.length, groupByMethod);
+                        
+                    } catch (error) {
+                        failed++;
+                        const currentExecutionOrder = ++executionCounter;
+                        results[originalIndex] = {
+                            index: originalIndex,
+                            executionOrder: currentExecutionOrder,
+                            method: task.method,
+                            params: task.params,
+                            success: false,
+                            error: error.message
+                        };
+                        
+                        // 更新结果显示
+                        updateMultiBatchResults(resultsDiv, results, completed, failed, tasksList.length, groupByMethod);
+                    }
+                });
+                
+                // 等待当前批次完成
+                await Promise.all(batchPromises);
+            }
+            
+            // 执行完成
+            executeBtn.disabled = false;
+            executeBtn.textContent = '🎯 多方法批量执行';
+            progressDiv.innerHTML = `✅ 多方法批量执行完成！成功: ${completed}, 失败: ${failed}`;
+            
+            if (failed === 0) {
+                resultArea.className = 'result-area result-success';
+            } else if (completed === 0) {
+                resultArea.className = 'result-area result-error';
+            } else {
+                resultArea.className = 'result-area';
+            }
+        }
+        
+        // 更新多方法批量执行结果显示
+        function updateMultiBatchResults(resultsDiv, results, completed, failed, total, groupByMethod) {
+            let html = `<div style="margin: 10px 0; font-weight: bold;">进度: ${completed + failed}/${total} (成功: ${completed}, 失败: ${failed})</div>`;
+            
+            // 过滤出已完成的结果
+            const completedResults = results.filter(result => result !== undefined);
+            
+            if (groupByMethod) {
+                // 按方法分组显示
+                const groupedResults = {};
+                completedResults.forEach(result => {
+                    if (!groupedResults[result.method]) {
+                        groupedResults[result.method] = [];
+                    }
+                    groupedResults[result.method].push(result);
+                });
+                
+                Object.entries(groupedResults).forEach(([method, methodResults]) => {
+                    html += `<div style="margin: 15px 0; padding: 10px; border: 2px solid #007bff; border-radius: 6px; background: #f8f9fa;">`;
+                    html += `<h4 style="margin: 0 0 10px 0; color: #007bff;">📌 ${method} (${methodResults.length}个任务)</h4>`;
+                    
+                    // 按执行顺序排序
+                    methodResults.sort((a, b) => a.executionOrder - b.executionOrder);
+                    
+                    methodResults.forEach(result => {
+                        html += generateResultItem(result);
+                    });
+                    
+                    html += `</div>`;
+                });
+            } else {
+                // 按执行顺序显示
+                const sortedResults = completedResults.sort((a, b) => a.executionOrder - b.executionOrder);
+                sortedResults.forEach(result => {
+                    html += generateResultItem(result);
+                });
+            }
+            
+            resultsDiv.innerHTML = html;
+            
+            // 如果多方法批量执行完成，保存结果数据并显示导出按钮
+            if (completed + failed === total) {
+                // 清空之前的多方法批量结果
+                multiBatchResults = [];
+                
+                // 保存所有结果
+                completedResults.forEach(result => {
+                    multiBatchResults.push({
+                        timestamp: new Date().toISOString(),
+                        method: result.method,
+                        params: result.params,
+                        result: result.result,
+                        success: result.success,
+                        executionOrder: result.executionOrder,
+                        originalIndex: result.index,
+                        error: result.error || null
+                    });
+                });
+                
+                // 显示导出按钮
+                document.getElementById('multiBatchExportButtons').style.display = 'flex';
+            }
+        }
+        
+        // 生成单个结果项的HTML
+        function generateResultItem(result) {
+            let html = `<div style="margin: 5px 0; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">`;
+            html += `<strong>执行顺序 ${result.executionOrder} (原始任务 ${result.index + 1}) - ${result.method}:</strong> `;
+            if (result.success) {
+                html += `<span style="color: green;">✅ 成功</span><br>`;
+                html += `<small>参数: ${JSON.stringify(result.params)}</small><br>`;
+                html += `<small>结果: ${JSON.stringify(result.result)}</small>`;
+            } else {
+                html += `<span style="color: red;">❌ 失败</span><br>`;
+                html += `<small>参数: ${JSON.stringify(result.params)}</small><br>`;
+                html += `<small>错误: ${result.error}</small>`;
+            }
+            html += `</div>`;
+            return html;
+        }
+        
+
+        
+        // 导出功能实现
+        let debugResults = [];
+        let batchResults = [];
+        let multiBatchResults = [];
+        
+        // 导出调试结果
+        function exportDebugResult(type) {
+            if (debugResults.length === 0) {
+                alert('没有可导出的结果');
+                return;
+            }
+            
+            let dataToExport = [];
+            if (type === 'success') {
+                dataToExport = debugResults.filter(r => r.success);
+            } else if (type === 'failed') {
+                dataToExport = debugResults.filter(r => !r.success);
+            } else {
+                dataToExport = debugResults;
+            }
+            
+            if (dataToExport.length === 0) {
+                alert(`没有${type === 'success' ? '成功' : type === 'failed' ? '失败' : ''}的结果可导出`);
+                return;
+            }
+            
+            exportToFile(dataToExport, `debug_results_${type}_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`);
+        }
+        
+        // 导出批量结果
+        function exportBatchResult(type) {
+            if (batchResults.length === 0) {
+                alert('没有可导出的结果');
+                return;
+            }
+            
+            let dataToExport = [];
+            if (type === 'success') {
+                dataToExport = batchResults.filter(r => r.success);
+            } else if (type === 'failed') {
+                dataToExport = batchResults.filter(r => !r.success);
+            } else {
+                dataToExport = batchResults;
+            }
+            
+            if (dataToExport.length === 0) {
+                alert(`没有${type === 'success' ? '成功' : type === 'failed' ? '失败' : ''}的结果可导出`);
+                return;
+            }
+            
+            exportToFile(dataToExport, `batch_results_${type}_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`);
+        }
+        
+        // 导出多方法批量结果
+        function exportMultiBatchResult(type) {
+            if (multiBatchResults.length === 0) {
+                alert('没有可导出的结果');
+                return;
+            }
+            
+            let dataToExport = [];
+            if (type === 'success') {
+                dataToExport = multiBatchResults.filter(r => r.success);
+            } else if (type === 'failed') {
+                dataToExport = multiBatchResults.filter(r => !r.success);
+            } else {
+                dataToExport = multiBatchResults;
+            }
+            
+            if (dataToExport.length === 0) {
+                alert(`没有${type === 'success' ? '成功' : type === 'failed' ? '失败' : ''}的结果可导出`);
+                return;
+            }
+            
+            exportToFile(dataToExport, `multi_batch_results_${type}_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`);
+        }
+        
+        // 通用导出文件函数
+        function exportToFile(data, filename) {
+            const jsonStr = JSON.stringify(data, null, 2);
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        
+        // 重新运行失败的调试任务
+        function retryFailedDebugTasks() {
+            const failedTasks = debugResults.filter(r => !r.success);
+            if (failedTasks.length === 0) {
+                alert('没有失败的任务需要重新运行');
+                return;
+            }
+            
+            if (!confirm(`确定要重新运行 ${failedTasks.length} 个失败的任务吗？`)) {
+                return;
+            }
+            
+            // 清空当前结果
+            debugResults = [];
+            document.getElementById('debugExportButtons').style.display = 'none';
+            
+            // 重新运行失败的任务
+            failedTasks.forEach((task, index) => {
+                setTimeout(() => {
+                    executeMethod(task.method, task.params || {});
+                }, index * 1000); // 每个任务间隔1秒
+            });
+        }
+        
+        // 重新运行失败的批量任务
+        function retryFailedBatchTasks() {
+            const failedTasks = batchResults.filter(r => !r.success);
+            if (failedTasks.length === 0) {
+                alert('没有失败的任务需要重新运行');
+                return;
+            }
+            
+            if (!confirm(`确定要重新运行 ${failedTasks.length} 个失败的任务吗？`)) {
+                return;
+            }
+            
+            // 清空当前结果
+            batchResults = [];
+            document.getElementById('batchExportButtons').style.display = 'none';
+            
+            // 重新运行失败的任务
+            const methodName = document.getElementById('batchMethodSelect').value;
+            const paramsList = failedTasks.map(task => task.params || {});
+            
+            executeBatch(methodName, paramsList);
+        }
+        
+        // 重新运行失败的多方法批量任务
+        function retryFailedMultiBatchTasks() {
+            const failedTasks = multiBatchResults.filter(r => !r.success);
+            if (failedTasks.length === 0) {
+                alert('没有失败的任务需要重新运行');
+                return;
+            }
+            
+            if (!confirm(`确定要重新运行 ${failedTasks.length} 个失败的任务吗？`)) {
+                return;
+            }
+            
+            // 清空当前结果
+            multiBatchResults = [];
+            document.getElementById('multiBatchExportButtons').style.display = 'none';
+            
+            // 重新运行失败的任务
+            const tasks = failedTasks.map(task => ({
+                method: task.method,
+                params: task.params || {}
+            }));
+            
+            // 使用默认配置重新执行
+            const timeout = 30;
+            const concurrency = 5;
+            const intervalConfig = { type: 'fixed', value: 0 };
+            const randomOrder = false;
+            const groupByMethod = false;
+            const executeBtn = document.getElementById('multiBatchExecuteBtn');
+            const resultArea = document.getElementById('multiBatchResultArea');
+            
+            executeBtn.disabled = true;
+            executeBtn.textContent = '⏳ 重新执行失败任务中...';
+            resultArea.style.display = 'block';
+            
+            executeMultiBatchTasks(tasks, timeout, concurrency, intervalConfig, randomOrder, groupByMethod, executeBtn, resultArea);
         }
         
         // 页面加载时获取数据

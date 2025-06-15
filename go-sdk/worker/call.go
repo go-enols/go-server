@@ -1,4 +1,4 @@
-package workersdk
+package worker
 
 import (
 	"encoding/json"
@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/go-enols/go-server/go-sdk/schedulersdk"
+	"github.com/go-enols/go-server/go-sdk/scheduler"
 )
 
 func Call(host, method string, params interface{}, out interface{}) error {
@@ -17,7 +17,7 @@ func Call(host, method string, params interface{}, out interface{}) error {
 			return fmt.Errorf("参数out必须是指针类型或nil")
 		}
 	}
-	client := schedulersdk.NewSchedulerClient(host)
+	client := scheduler.NewSchedulerClient(host)
 	res, err := client.Execute(method, params)
 	if err != nil {
 		return err

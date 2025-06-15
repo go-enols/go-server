@@ -1,6 +1,6 @@
-const SchedulerClient = require('./schedulersdk/client');
-const Worker = require('./workersdk/worker');
-const call = require('./workersdk/call');
+const SchedulerClient = require('./scheduler/client');
+const Worker = require('./worker/worker');
+const call = require('./worker/call');
 
 module.exports = {
   SchedulerClient,

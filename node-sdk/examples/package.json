@@ -9,6 +9,6 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "go-server-sdk": "^1.0.1"
+    "go-server-sdk": "^2.0.1"
   }
 }

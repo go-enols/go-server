@@ -1,4 +1,4 @@
-package schedulersdk
+package scheduler
 
 import (
 	"fmt"

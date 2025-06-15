@@ -17,9 +17,9 @@ with open(os.path.join(here, 'requirements.txt')) as f:
 
 setup(
     name="go-server-sdk",
-    version="1.3.0",
-    author="go-server team",
-    author_email="",
+    version="2.0.1",
+    author="enols",
+    author_email="2575169674@qq.com",
     description="Python SDK for go-server distributed task scheduling system",
     long_description=long_description,
     long_description_content_type="text/markdown",

@@ -49,19 +49,19 @@
 │   └── worker/       // Worker 示例
 │       └── main.go
 ├── go-sdk/           // Go SDK
-│   ├── schedulersdk/ // 客户端与调度器交互的 SDK
+│   ├── scheduler/    // 客户端与调度器交互的 SDK
 │   │   ├── client.go
 │   │   └── retry_client.go
-│   └── workersdk/    // Worker 与调度器交互的 SDK
+│   └── worker/       // Worker 与调度器交互的 SDK
 │       ├── call.go
 │       └── worker.go
 ├── python-sdk/       // Python SDK
-│   ├── schedulersdk/ // Python 客户端 SDK
-│   ├── workersdk/    // Python Worker SDK
+│   ├── scheduler/    // Python 客户端 SDK
+│   ├── worker/       // Python Worker SDK
 │   └── examples/     // Python 示例代码
 ├── node-sdk/         // Node.js SDK
-│   ├── schedulersdk/ // Node.js 客户端 SDK
-│   ├── workersdk/    // Node.js Worker SDK
+│   ├── scheduler/    // Node.js 客户端 SDK
+│   ├── worker/       // Node.js Worker SDK
 │   └── examples/     // Node.js 示例代码
 ├── image/            // 项目相关图片
 ├── go.mod            // Go 模块文件
@@ -78,7 +78,13 @@
 
 **安装方式**:
 ```bash
-# 从源码安装
+# 从 PyPI 安装
+pip install go-server-sdk==2.0.1
+
+# 或安装最新版本
+pip install go-server-sdk
+
+# 从源码安装（开发用）
 cd python-sdk
 pip install -e .
 ```
@@ -86,14 +92,14 @@ pip install -e .
 **快速使用**:
 ```python
 # 客户端调用
-from schedulersdk import SchedulerClient
+from scheduler import SchedulerClient
 
 client = SchedulerClient("http://localhost:8080")
 result = client.execute_sync("add", {"a": 1, "b": 2}, timeout=30.0)
 print(f"Result: {result.result}")
 
 # Worker 注册
-from workersdk import Worker, Config
+from worker import Worker, Config
 
 def add_numbers(params):
     return params["a"] + params["b"]
@@ -148,17 +154,17 @@ go get github.com/go-enols/go-server
 **快速使用**:
 ```go
 // 客户端调用
-import "github.com/go-enols/go-server/workersdk"
+import "github.com/go-enols/go-server/worker"
 
-result := workersdk.Call("http://localhost:8080", "add", map[string]any{
+result := worker.Call("http://localhost:8080", "add", map[string]any{
     "a": 1,
     "b": 2,
 }, nil)
 
 // Worker 注册
-import "github.com/go-enols/go-server/workersdk"
+import "github.com/go-enols/go-server/worker"
 
-worker := workersdk.NewWorker("http://localhost:8080", "go_workers")
+worker := worker.NewWorker("http://localhost:8080", "go_workers")
 worker.RegisterMethod("add", addNumbers, "Add two numbers")
 worker.Start()
 ```
@@ -166,7 +172,7 @@ worker.Start()
 ## 核心组件
 
 ### 1. 调度器 (Scheduler)
-**文件**: `scheduler.go`, `schedulersdk/`
+**文件**: `scheduler.go`, `scheduler/`
 
 **主要功能**:
 - 🌐 **Web UI 管理界面**: 提供实时监控和调试功能
@@ -183,7 +189,7 @@ worker.Start()
 - `WS /api/worker/connect` - Worker 连接端点
 
 ### 2. 工作节点 (Worker)
-**文件**: `workersdk/`, `examples/worker/`
+**文件**: `worker/`, `examples/worker/`
 
 **主要功能**:
 - 🔌 **自动连接**: 自动连接到调度器并注册方法
@@ -201,7 +207,7 @@ worker.RegisterMethod("add", addNumbers,
 ```
 
 ### 3. 客户端 (Client)
-**文件**: `schedulersdk/`, `examples/client/`
+**文件**: `scheduler/`, `examples/client/`
 
 **主要功能**:
 - 📤 **任务提交**: 向调度器提交任务请求
@@ -211,7 +217,7 @@ worker.RegisterMethod("add", addNumbers,
 
 **使用示例**:
 ```go
-workersdk.Call("http://localhost:8080", "add", map[string]any{
+worker.Call("http://localhost:8080", "add", map[string]any{
     "a": 1,
     "b": 2,
 }, nil)

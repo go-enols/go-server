@@ -57,7 +57,7 @@ python setup.py install
 ### Client Usage
 
 ```python
-from python_sdk.schedulersdk import SchedulerClient
+from python_sdk.scheduler import SchedulerClient
 
 # Create a client
 client = SchedulerClient("http://localhost:8080")
@@ -78,7 +78,7 @@ print(f"Async result: {result.result}")  # Output: Async result: 8
 ### Worker Usage
 
 ```python
-from python_sdk.workersdk import Worker, Config
+from python_sdk.worker import Worker, Config
 import time
 
 # Define your methods
@@ -158,7 +158,7 @@ except Exception as e:
 For quick one-off calls, you can use the simple `call` function:
 
 ```python
-from python_sdk.workersdk import call
+from python_sdk.worker import call
 
 # Simple synchronous call
 result = call("http://localhost:8080", "add", {"a": 1, "b": 2})
@@ -168,7 +168,7 @@ print(f"Result: {result}")  # Output: Result: 3
 result: int = call("http://localhost:8080", "add", {"a": 1, "b": 2}, int)
 
 # Async call
-from python_sdk.workersdk import call_async, get_result
+from python_sdk.worker import call_async, get_result
 
 task_id = call_async("http://localhost:8080", "long_task", {"duration": 10})
 print(f"Task submitted: {task_id}")
@@ -183,7 +183,7 @@ print(f"Task result: {result}")
 For more robust operation, use the retry client:
 
 ```python
-from python_sdk.schedulersdk import RetryClient
+from python_sdk.scheduler import RetryClient
 
 # Create retry client with custom settings
 client = RetryClient(
@@ -237,7 +237,7 @@ config = Config(
 The SDK provides comprehensive error handling:
 
 ```python
-from python_sdk.schedulersdk import SchedulerClient
+from python_sdk.scheduler import SchedulerClient
 import requests
 
 client = SchedulerClient("http://localhost:8080")

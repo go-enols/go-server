@@ -4,18 +4,18 @@ This package provides Python client and worker libraries for interacting with th
 distributed task scheduling system.
 
 Modules:
-    schedulersdk: Client libraries for submitting tasks to the scheduler
-    workersdk: Worker libraries for processing tasks
+    scheduler: Client libraries for submitting tasks to the scheduler
+    worker: Worker libraries for processing tasks
 
 Example usage:
     # Client usage
-    from python_sdk.schedulersdk import SchedulerClient
+    from python_sdk.scheduler import SchedulerClient
     
     client = SchedulerClient("http://localhost:8080")
     result = client.execute_sync("add", {"a": 1, "b": 2})
     
     # Worker usage
-    from python_sdk.workersdk import Worker, Config
+    from python_sdk.worker import Worker, Config
     
     def add_numbers(params):
         return params["a"] + params["b"]
@@ -29,18 +29,18 @@ Example usage:
     worker.start()
     
     # Simple call function
-    from python_sdk.workersdk import call
+    from python_sdk.worker import call
     
     result = call("http://localhost:8080", "add", {"a": 1, "b": 2})
 """
 
-__version__ = "1.3.0"
+__version__ = "2.0.1"
 __author__ = "go-server team"
 __description__ = "Python SDK for go-server distributed task scheduling system"
 
 # Import main classes for convenience
-from .schedulersdk import SchedulerClient, RetryClient
-from .workersdk import Worker, Config, call
+from .scheduler import SchedulerClient, RetryClient
+from .worker import Worker, Config, call
 
 __all__ = [
     'SchedulerClient',

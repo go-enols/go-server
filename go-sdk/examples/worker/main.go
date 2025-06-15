@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"log"
 
-	"github.com/go-enols/go-server/go-sdk/workersdk" // 假设SDK被导入为这个包名
+	"github.com/go-enols/go-server/go-sdk/worker" // 假设SDK被导入为这个包名
 )
 
 func main() {
 	// 1. 创建Worker配置
-	config := workersdk.Config{
+	config := worker.Config{
 		SchedulerURL: "ws://localhost:8080/api/worker/connect",
 		WorkerGroup:  "math",
 		MaxRetry:     5,
@@ -17,7 +17,7 @@ func main() {
 	}
 
 	// 2. 创建Worker实例
-	worker := workersdk.NewWorker(config)
+	worker := worker.NewWorker(config)
 
 	// 3. 注册业务方法
 	if err := worker.RegisterMethod("add", addNumbers,
