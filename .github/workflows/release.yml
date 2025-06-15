@@ -1,0 +1,170 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Get tag version
+      id: get_version
+      run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+    
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ steps.get_version.outputs.VERSION }}
+        release_name: Release ${{ steps.get_version.outputs.VERSION }}
+        body: |
+          ## 🚀 Release ${{ steps.get_version.outputs.VERSION }}
+          
+          ### 📦 安装方式
+          
+          **Python SDK:**
+          ```bash
+          pip install go-server-sdk==${{ steps.get_version.outputs.VERSION }}
+          ```
+          
+          **Node.js SDK:**
+          ```bash
+          npm install go-server-sdk@${{ steps.get_version.outputs.VERSION }}
+          ```
+          
+          **Go SDK:**
+          ```bash
+          go get github.com/go-enols/go-server@${{ steps.get_version.outputs.VERSION }}
+          ```
+          
+          ### 📋 更新内容
+          
+          - 请查看 [CHANGELOG.md](https://github.com/go-enols/go-server/blob/main/CHANGELOG.md) 了解详细更新内容
+          
+          ### 🔗 相关链接
+          
+          - [PyPI Package](https://pypi.org/project/go-server-sdk/${{ steps.get_version.outputs.VERSION }}/)
+          - [NPM Package](https://www.npmjs.com/package/go-server-sdk/v/${{ steps.get_version.outputs.VERSION }})
+          - [Documentation](https://github.com/go-enols/go-server/blob/main/README.md)
+        draft: false
+        prerelease: false
+
+  build-and-upload:
+    name: Build and Upload Assets
+    needs: create-release
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        include:
+          - goos: linux
+            goarch: amd64
+          - goos: linux
+            goarch: arm64
+          - goos: windows
+            goarch: amd64
+          - goos: darwin
+            goarch: amd64
+          - goos: darwin
+            goarch: arm64
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.21'
+    
+    - name: Get tag version
+      id: get_version
+      run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+    
+    - name: Build binary
+      env:
+        GOOS: ${{ matrix.goos }}
+        GOARCH: ${{ matrix.goarch }}
+        CGO_ENABLED: 0
+      run: |
+        mkdir -p dist
+        if [ "$GOOS" = "windows" ]; then
+          go build -ldflags "-s -w -X main.version=${{ steps.get_version.outputs.VERSION }}" -o dist/go-server-${{ matrix.goos }}-${{ matrix.goarch }}.exe .
+        else
+          go build -ldflags "-s -w -X main.version=${{ steps.get_version.outputs.VERSION }}" -o dist/go-server-${{ matrix.goos }}-${{ matrix.goarch }} .
+        fi
+    
+    - name: Create archive
+      run: |
+        cd dist
+        if [ "${{ matrix.goos }}" = "windows" ]; then
+          zip go-server-${{ steps.get_version.outputs.VERSION }}-${{ matrix.goos }}-${{ matrix.goarch }}.zip go-server-${{ matrix.goos }}-${{ matrix.goarch }}.exe
+          echo "ASSET_PATH=dist/go-server-${{ steps.get_version.outputs.VERSION }}-${{ matrix.goos }}-${{ matrix.goarch }}.zip" >> $GITHUB_ENV
+          echo "ASSET_NAME=go-server-${{ steps.get_version.outputs.VERSION }}-${{ matrix.goos }}-${{ matrix.goarch }}.zip" >> $GITHUB_ENV
+          echo "ASSET_TYPE=application/zip" >> $GITHUB_ENV
+        else
+          tar -czf go-server-${{ steps.get_version.outputs.VERSION }}-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz go-server-${{ matrix.goos }}-${{ matrix.goarch }}
+          echo "ASSET_PATH=dist/go-server-${{ steps.get_version.outputs.VERSION }}-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz" >> $GITHUB_ENV
+          echo "ASSET_NAME=go-server-${{ steps.get_version.outputs.VERSION }}-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz" >> $GITHUB_ENV
+          echo "ASSET_TYPE=application/gzip" >> $GITHUB_ENV
+        fi
+    
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ needs.create-release.outputs.upload_url }}
+        asset_path: ${{ env.ASSET_PATH }}
+        asset_name: ${{ env.ASSET_NAME }}
+        asset_content_type: ${{ env.ASSET_TYPE }}
+
+  publish-packages:
+    name: Publish Packages
+    needs: create-release
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        registry-url: 'https://registry.npmjs.org'
+    
+    - name: Install Python build dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install build twine
+    
+    - name: Build and publish Python package
+      working-directory: ./python-sdk
+      run: |
+        python -m build
+        twine upload dist/* --skip-existing
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+    
+    - name: Install Node.js dependencies and publish
+      working-directory: ./node-sdk
+      run: |
+        npm ci
+        npm publish --access public
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

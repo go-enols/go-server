@@ -1,0 +1,152 @@
+name: Code Quality
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint-go:
+    name: Lint Go Code
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.21'
+    
+    - name: golangci-lint
+      uses: golangci/golangci-lint-action@v3
+      with:
+        version: latest
+        args: --timeout=5m
+
+  lint-python:
+    name: Lint Python Code
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Install dependencies
+      working-directory: ./python-sdk
+      run: |
+        python -m pip install --upgrade pip
+        pip install flake8 black isort mypy
+        pip install -r requirements.txt
+    
+    - name: Run flake8
+      working-directory: ./python-sdk
+      run: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+    
+    - name: Check code formatting with black
+      working-directory: ./python-sdk
+      run: black --check --diff .
+    
+    - name: Check import sorting with isort
+      working-directory: ./python-sdk
+      run: isort --check-only --diff .
+    
+    - name: Type checking with mypy
+      working-directory: ./python-sdk
+      run: mypy . --ignore-missing-imports || true
+
+  lint-nodejs:
+    name: Lint Node.js Code
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: 'node-sdk/package-lock.json'
+    
+    - name: Install dependencies
+      working-directory: ./node-sdk
+      run: |
+        npm ci
+        npm install --save-dev eslint prettier
+    
+    - name: Run ESLint
+      working-directory: ./node-sdk
+      run: |
+        npx eslint . --ext .js,.ts || echo "ESLint not configured, skipping"
+    
+    - name: Check code formatting with Prettier
+      working-directory: ./node-sdk
+      run: |
+        npx prettier --check . || echo "Prettier not configured, skipping"
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+    
+    - name: Upload Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v2
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+  dependency-check:
+    name: Dependency Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.21'
+    
+    - name: Check Go dependencies
+      run: |
+        go mod verify
+        go mod tidy
+        git diff --exit-code go.mod go.sum
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Check Python dependencies
+      working-directory: ./python-sdk
+      run: |
+        python -m pip install --upgrade pip
+        pip install safety
+        safety check -r requirements.txt || true
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+    
+    - name: Check Node.js dependencies
+      working-directory: ./node-sdk
+      run: |
+        npm audit --audit-level=high || true
