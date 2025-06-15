@@ -1,4 +1,4 @@
-// Package worker provides utility functions for calling remote methods through the scheduler.
+// Package worker provides functionality for calling methods on the scheduler.
 package worker
 
 import (
@@ -8,6 +8,10 @@ import (
 	"reflect"
 
 	"github.com/go-enols/go-server/go-sdk/scheduler"
+)
+
+const (
+	TaskStatusError = "error"
 )
 
 func Call(host, method string, params, out interface{}) error {
@@ -23,7 +27,7 @@ func Call(host, method string, params, out interface{}) error {
 	if err != nil {
 		return err
 	}
-	if res.Status == "error" {
+	if res.Status == TaskStatusError {
 		return errors.New(string(res.Result))
 	}
 	// 轮询结果
@@ -32,7 +36,7 @@ func Call(host, method string, params, out interface{}) error {
 		return err
 	}
 
-	if result.Status == "error" {
+	if result.Status == TaskStatusError {
 		return errors.New(string(result.Result))
 	}
 	if out != nil {

@@ -4,6 +4,7 @@ package worker
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"reflect"
 	"sync"
 	"time"
@@ -117,82 +118,119 @@ func (w *Worker) connect() error {
 // 增强processTasks方法
 func (w *Worker) processTasks() {
 	for w.running {
-		w.connMutex.Lock()
-		conn := w.conn
-		w.connMutex.Unlock()
-
-		if conn == nil {
-			if !w.reconnect {
-				return
-			}
-			if err := w.connect(); err != nil {
-				log.Printf("Reconnect failed: %v (retrying in 5s)", err)
-				time.Sleep(5 * time.Second)
-				continue
-			}
-			continue
+		if !w.ensureConnection() {
+			return
 		}
 
-		var msg struct {
-			Type   string          `json:"type"`
-			TaskID string          `json:"taskId"`
-			Method string          `json:"method"`
-			Params json.RawMessage `json:"params"`
-		}
-
-		if err := conn.ReadJSON(&msg); err != nil {
+		msg, err := w.readMessage()
+		if err != nil {
 			if !w.running {
 				return
 			}
-
-			if websocket.IsCloseError(err,
-				websocket.CloseNormalClosure,
-				websocket.CloseGoingAway,
-				websocket.CloseAbnormalClosure) {
-
-				log.Printf("Connection closed: %v", err)
-			} else {
-				log.Printf("Read error: %v", err)
-			}
-
-			// 关闭当前连接
-			w.connMutex.Lock()
-			if w.conn != nil {
-				if closeErr := w.conn.Close(); closeErr != nil {
-					log.Printf("Failed to close connection: %v", closeErr)
-				}
-				w.conn = nil
-			}
-			w.connMutex.Unlock()
-
+			w.handleReadError(err)
 			continue
 		}
 
-		switch msg.Type {
-		case "task":
-			go w.handleTask(msg.TaskID, msg.Method, msg.Params)
-		case "ping": // 添加对 ping 消息的处理
+		w.handleMessage(msg)
+	}
+}
 
-			w.connMutex.Lock()
-			if w.conn != nil {
-				pongMsg := map[string]string{"type": "pong"}
-				if err := w.conn.WriteJSON(pongMsg); err != nil {
-					log.Printf("Failed to send pong to scheduler: %v", err)
-					// 连接出错时关闭连接
-					if w.conn != nil {
-						if closeErr := w.conn.Close(); closeErr != nil {
-							log.Printf("Failed to close connection: %v", closeErr)
-						}
-						w.conn = nil
-					}
-				}
+func (w *Worker) ensureConnection() bool {
+	w.connMutex.Lock()
+	conn := w.conn
+	w.connMutex.Unlock()
+
+	if conn == nil {
+		if !w.reconnect {
+			return false
+		}
+		if err := w.connect(); err != nil {
+			log.Printf("Reconnect failed: %v (retrying in 5s)", err)
+			time.Sleep(5 * time.Second)
+		}
+	}
+	return true
+}
+
+func (w *Worker) readMessage() (struct {
+	Type   string          `json:"type"`
+	TaskID string          `json:"taskId"`
+	Method string          `json:"method"`
+	Params json.RawMessage `json:"params"`
+}, error) {
+	var msg struct {
+		Type   string          `json:"type"`
+		TaskID string          `json:"taskId"`
+		Method string          `json:"method"`
+		Params json.RawMessage `json:"params"`
+	}
+
+	w.connMutex.Lock()
+	conn := w.conn
+	w.connMutex.Unlock()
+
+	if conn == nil {
+		return msg, fmt.Errorf("no connection")
+	}
+
+	err := conn.ReadJSON(&msg)
+	return msg, err
+}
+
+func (w *Worker) handleReadError(err error) {
+	if websocket.IsCloseError(err,
+		websocket.CloseNormalClosure,
+		websocket.CloseGoingAway,
+		websocket.CloseAbnormalClosure) {
+		log.Printf("Connection closed: %v", err)
+	} else {
+		log.Printf("Read error: %v", err)
+	}
+
+	w.closeConnection()
+}
+
+func (w *Worker) closeConnection() {
+	w.connMutex.Lock()
+	defer w.connMutex.Unlock()
+	if w.conn != nil {
+		if closeErr := w.conn.Close(); closeErr != nil {
+			log.Printf("Failed to close connection: %v", closeErr)
+		}
+		w.conn = nil
+	}
+}
+
+func (w *Worker) handleMessage(msg struct {
+	Type   string          `json:"type"`
+	TaskID string          `json:"taskId"`
+	Method string          `json:"method"`
+	Params json.RawMessage `json:"params"`
+}) {
+	switch msg.Type {
+	case "task":
+		go w.handleTask(msg.TaskID, msg.Method, msg.Params)
+	case "ping":
+		w.handlePing()
+	}
+}
+
+func (w *Worker) handlePing() {
+	w.connMutex.Lock()
+	defer w.connMutex.Unlock()
+	if w.conn != nil {
+		pongMsg := map[string]string{"type": "pong"}
+		if err := w.conn.WriteJSON(pongMsg); err != nil {
+			log.Printf("Failed to send pong to scheduler: %v", err)
+			if closeErr := w.conn.Close(); closeErr != nil {
+				log.Printf("Failed to close connection: %v", closeErr)
 			}
-			w.connMutex.Unlock()
+			w.conn = nil
 		}
 	}
 }
 
-// 修改Stop方法
+// Stop stops the worker and closes all connections.
 func (w *Worker) Stop() {
 	if !w.running {
 		return

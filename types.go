@@ -1,3 +1,4 @@
+// Package goserver defines the core types and structures for the distributed task scheduling system.
 package goserver
 
 import (

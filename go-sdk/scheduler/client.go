@@ -1,8 +1,9 @@
-// Package scheduler provides client functionality for communicating with the distributed task scheduler.
+// Package scheduler provides client functionality for interacting with the go-server scheduler.
 package scheduler
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -10,6 +11,11 @@ import (
 	"log"
 	"net/http"
 	"time"
+)
+
+const (
+	TaskStatusError = "error"
+	TaskStatusDone  = "done"
 )
 
 type Client struct {
@@ -49,11 +55,14 @@ func (c *Client) Execute(method string, params interface{}) (*ResultResponse, er
 		return nil, fmt.Errorf("marshal request failed: %w", err)
 	}
 
-	resp, err := c.httpClient.Post(
-		c.baseURL+"/api/execute",
-		"application/json",
-		bytes.NewBuffer(requestBody),
-	)
+	ctx := context.Background()
+	req, err := http.NewRequestWithContext(ctx, "POST", c.baseURL+"/api/execute", bytes.NewBuffer(requestBody))
+	if err != nil {
+		return nil, fmt.Errorf("create request failed: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("HTTP request failed: %w", err)
 	}
@@ -78,7 +87,13 @@ func (c *Client) Execute(method string, params interface{}) (*ResultResponse, er
 
 // GetResult retrieves the result of a task by its ID.
 func (c *Client) GetResult(taskID string) (*ResultResponse, error) {
-	resp, err := c.httpClient.Get(c.baseURL + "/api/result/" + taskID)
+	ctx := context.Background()
+	req, err := http.NewRequestWithContext(ctx, "GET", c.baseURL+"/api/result/"+taskID, http.NoBody)
+	if err != nil {
+		return nil, fmt.Errorf("create request failed: %w", err)
+	}
+
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("HTTP request failed: %w", err)
 	}
@@ -102,13 +117,13 @@ func (c *Client) GetResult(taskID string) (*ResultResponse, error) {
 	case "pending", "processing":
 		time.Sleep(1 * time.Second)
 		return c.GetResult(taskID)
-	case "error":
+	case TaskStatusError:
 		return nil, errors.New(string(response.Result))
 	}
 	return &response, nil
 }
 
-// 同步执行任务（带轮询）
+// ExecuteSync executes a task synchronously with polling.
 func (c *Client) ExecuteSync(method string, params interface{}, timeout time.Duration) (*ResultResponse, error) {
 	// 提交任务
 	execResp, err := c.Execute(method, params)
@@ -125,9 +140,9 @@ func (c *Client) ExecuteSync(method string, params interface{}, timeout time.Dur
 		}
 
 		switch resultResp.Status {
-		case "done":
+		case TaskStatusDone:
 			return resultResp, nil
-		case "error":
+		case TaskStatusError:
 			return nil, errors.New(string(resultResp.Result))
 			// "pending" 或 "processing" 状态继续等待
 		}
