@@ -12,15 +12,16 @@ try:
 except FileNotFoundError:
     long_description = "Python SDK for go-server distributed task scheduling system"
 
-# Read requirements
-with open(os.path.join(here, "requirements.txt")) as f:
-    requirements = [
-        line.strip() for line in f if line.strip() and not line.startswith("#")
-    ]
+# Dependencies are now defined in pyproject.toml
+requirements = [
+    "requests>=2.25.0",
+    "websocket-client>=1.0.0",
+    "typing-extensions>=3.7.4; python_version<'3.8'",
+]
 
 setup(
     name="go-server-sdk",
-    version="2.0.1",
+    version="1.4.0",
     author="enols",
     author_email="2575169674@qq.com",
     description="Python SDK for go-server distributed task scheduling system",
@@ -31,7 +32,6 @@ setup(
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
-        "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.7",

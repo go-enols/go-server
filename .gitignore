@@ -25,3 +25,6 @@ log
 # Specific log directory
 examples/client/log/
 node_modules/
+dist/
+go_server_sdk.egg-info/
+pyproject.toml
