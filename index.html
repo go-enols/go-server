@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>调度器管理界面</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -947,7 +948,7 @@
                     html += '</div>';
                     html += '<div class="method-docs' + (isExpanded ? ' expanded' : '') + '" id="' + methodId + '">';
                     if (method.docs && method.docs.length > 0) {
-                        html += method.docs.join('<br>');
+                        html += marked.parse(method.docs.join('\n')); 
                     } else {
                         html += '暂无文档说明';
                     }
