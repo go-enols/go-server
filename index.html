@@ -895,7 +895,7 @@
                 html += '</div>';
                 html += '<div class="method-docs" id="' + methodId + '">';
                 if (method.docs && method.docs.length > 0) {
-                    html += method.docs.join('<br>');
+                        html += marked.parse(method.docs.join('\n')); // 使用marked库解析markdown格式文档
                 } else {
                     html += '暂无文档说明';
                 }
