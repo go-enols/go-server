@@ -384,7 +384,7 @@ func (s *Scheduler) handleStatus(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *Scheduler) Start(addr string, key string) {
+func (s *Scheduler) Start(addr, key string) {
 	http.HandleFunc("/", s.handleUI)
 	http.HandleFunc("/api/worker/connect/"+key, s.handleWorkerConnection)
 	http.HandleFunc("/api/execute", s.handleExecute)
