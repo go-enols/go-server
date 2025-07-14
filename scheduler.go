@@ -5,7 +5,9 @@ import (
 	_ "embed"
 	"encoding/json"
 	"math"
+	"net"
 	"net/http"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -55,7 +57,10 @@ func (s *Scheduler) handleWorkerConnection(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	worker, err := s.registerWorker(conn)
+	// 获取客户端IP地址
+	clientIP := s.getClientIP(r)
+
+	worker, err := s.registerWorker(conn, clientIP)
 	if err != nil {
 		return
 	}
@@ -65,7 +70,7 @@ func (s *Scheduler) handleWorkerConnection(w http.ResponseWriter, r *http.Reques
 	go s.handleWorkerMessages(worker, conn)
 }
 
-func (s *Scheduler) registerWorker(conn *websocket.Conn) (*Worker, error) {
+func (s *Scheduler) registerWorker(conn *websocket.Conn, clientIP string) (*Worker, error) {
 	// 接收Worker注册信息
 	var reg struct {
 		ID      string                   `json:"id"`
@@ -90,10 +95,12 @@ func (s *Scheduler) registerWorker(conn *websocket.Conn) (*Worker, error) {
 		Methods:  methods,
 		LastPing: time.Now().UnixNano(),
 		Count:    0,
+		IP:       clientIP,
+		Group:    reg.Group,
 	}
 
 	s.workers.Store(worker.ID, worker)
-	log.Printf("Worker registered: %s (methods: %v)", worker.ID, worker.Methods)
+	log.Printf("Worker registered: %s from %s, group: %s (methods: %v)", worker.ID, clientIP, reg.Group, worker.Methods)
 	return worker, nil
 }
 
@@ -362,6 +369,8 @@ func (s *Scheduler) handleStatus(w http.ResponseWriter, r *http.Request) {
 			Methods:  worker.Methods,
 			LastPing: time.Unix(0, lastPingNano),
 			Count:    count,
+			IP:       worker.IP,
+			Group:    worker.Group,
 		})
 		return true
 	})
@@ -382,6 +391,34 @@ func (s *Scheduler) handleStatus(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		log.Printf("Failed to encode status response: %v", err)
 	}
+}
+
+// getClientIP 获取客户端真实IP地址
+func (s *Scheduler) getClientIP(r *http.Request) string {
+	// 检查 X-Forwarded-For 头
+	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
+		// X-Forwarded-For 可能包含多个IP，取第一个
+		if ips := strings.Split(xff, ","); len(ips) > 0 {
+			ip := strings.TrimSpace(ips[0])
+			if net.ParseIP(ip) != nil {
+				return ip
+			}
+		}
+	}
+
+	// 检查 X-Real-IP 头
+	if xri := r.Header.Get("X-Real-IP"); xri != "" {
+		if net.ParseIP(xri) != nil {
+			return xri
+		}
+	}
+
+	// 使用 RemoteAddr
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		return r.RemoteAddr
+	}
+	return host
 }
 
 func (s *Scheduler) Start(addr, key string) {

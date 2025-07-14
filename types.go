@@ -29,6 +29,8 @@ type Worker struct {
 	LastPing int64      // 使用原子操作，存储Unix纳秒时间戳
 	Count    int64      // 使用原子操作
 	ConnMu   sync.Mutex // 保护websocket连接的并发写入
+	IP       string     // Worker的IP地址
+	Group    string     // Worker的分组
 }
 
 type WorkerInfo struct {
@@ -36,6 +38,8 @@ type WorkerInfo struct {
 	Methods  []MethodInfo `json:"methods"`
 	LastPing time.Time    `json:"lastPing"`
 	Count    int64        `json:"count"`
+	IP       string       `json:"ip"`
+	Group    string       `json:"group"`
 }
 
 type MethodInfo struct {
