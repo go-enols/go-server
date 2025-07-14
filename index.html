@@ -826,6 +826,7 @@
                             <button class="tab-btn active" onclick="switchTab('debug')">🐛 单次调试</button>
                             <button class="tab-btn" onclick="switchTab('batch')">🚀 批量测试</button>
                             <button class="tab-btn" onclick="switchTab('multiBatch')">🎯 多方法测试</button>
+                            <button class="tab-btn" onclick="switchTab('encrypted')">🔐 加密调试</button>
                         </div>
                     </div>
                 
@@ -1024,6 +1025,62 @@
                         </div>
                     </div>
                 </div>
+                
+                <!-- 加密调试选项卡 -->
+                <div id="encryptedTab" class="tab-content" style="display: none;">
+                    <div class="debug-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="encryptedMethodSelect">🔧 选择方法</label>
+                                <select id="encryptedMethodSelect" onchange="updateEncryptedParamsInput()">
+                                    <option value="">请选择方法</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="encryptedTimeoutInput">⏱️ 超时时间 (秒)</label>
+                                <input type="number" id="encryptedTimeoutInput" value="30" min="1" max="300">
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="encryptionKeyInput">🔑 加密密钥</label>
+                                <input type="text" id="encryptionKeyInput" placeholder="请输入加密密钥" value="mySecretKey123">
+                                <small class="form-help">用于加密参数的密钥</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="saltDataInput">🧂 加盐数据</label>
+                                <input type="number" id="saltDataInput" placeholder="请输入加盐数值" value="42" min="0">
+                                <small class="form-help">用于位运算的加盐数值</small>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row single">
+                            <div class="form-group">
+                                <label for="encryptedParamsInput">📝 方法参数 (JSON格式)</label>
+                                <div class="json-input-container">
+                                    <textarea id="encryptedParamsInput" placeholder='{"key": "value"}' oninput="autoFormatJSON('encryptedParamsInput')" onblur="autoFormatJSON('encryptedParamsInput')"></textarea>
+                                    <div class="json-tools">
+                                        <button type="button" class="json-btn" onclick="toggleJSONPreview('encryptedParamsInput', 'encryptedParamsPreview')">👁️ 预览参数</button>
+                                        <button type="button" class="json-btn" onclick="autoFormatJSON('encryptedParamsInput')">🔧 格式化</button>
+                                        <button type="button" class="json-btn" onclick="importFromFile('encryptedParamsInput')">📁 导入文件</button>
+                                    </div>
+                                </div>
+                                <div id="encryptedParamsPreview" class="json-preview" style="display: none;"></div>
+                                <small class="form-help">输入原始参数，系统将自动加密后发送</small>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row single">
+                            <button class="execute-btn" onclick="executeEncryptedMethod()" id="encryptedExecuteBtn">
+                                <span style="margin-right: 8px;">🔐</span>
+                                执行加密调试
+                            </button>
+                        </div>
+                        
+                        <div id="encryptedResultArea" class="result-area" style="display: none;"></div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -1066,6 +1123,8 @@
     <script>
         // 全局变量
         let multiBatchTasks = []; // 存储多方法批量运行的任务列表
+        let allMethods = []; // 存储所有可用方法
+        let currentMethodGroups = {}; // 存储当前的方法组数据
         
         function loadData() {
             fetch('/api/status')
@@ -1157,8 +1216,7 @@
             }
             
             // 收集所有可用的方法
-            let allMethods = [];
-            // currentMethodGroups 已在全局声明，不需要重新声明
+            allMethods = []; // 使用全局变量
             workers.forEach(function(worker) {
                 worker.methods.forEach(function(method) {
                     if (!allMethods.find(m => m.name === method.name)) {
@@ -1484,7 +1542,7 @@
                             
                             // 显示导出按钮
                             document.getElementById('debugExportButtons').style.display = 'flex';
-                        } else if (data.status === 'error') {
+                        }else if (data.status === 'error') {
                             executeBtn.disabled = false;
                             executeBtn.textContent = '🚀 执行方法';
                             resultArea.className = 'result-area result-error';
@@ -1530,12 +1588,31 @@
             
             // 隐藏所有选项卡内容
             document.querySelectorAll('.tab-content').forEach(content => {
-                content.classList.remove('active');
+                content.style.display = 'none';
             });
             
             // 激活当前选项卡
             event.target.classList.add('active');
-            document.getElementById(tabName + 'Tab').classList.add('active');
+            document.getElementById(tabName + 'Tab').style.display = 'block';
+            
+            // 如果切换到加密选项卡，确保方法列表已加载
+            if (tabName === 'encrypted') {
+                updateEncryptedMethodSelect();
+            }
+        }
+        
+        // 更新加密选项卡的方法选择器
+        function updateEncryptedMethodSelect() {
+            const methodSelect = document.getElementById('encryptedMethodSelect');
+            if (methodSelect && allMethods) {
+                methodSelect.innerHTML = '<option value="">请选择方法</option>';
+                allMethods.forEach(method => {
+                    const option = document.createElement('option');
+                    option.value = method.name;
+                    option.textContent = method.name;
+                    methodSelect.appendChild(option);
+                });
+            }
         }
         
         // 批量执行方法
@@ -2775,11 +2852,294 @@
             executeMultiBatchTasks(tasks, timeout, concurrency, intervalConfig, randomOrder, groupByMethod, executeBtn, resultArea);
         }
         
-        // 页面加载时获取数据
-        loadData();
+        // 加密功能相关函数
+        let encryptedResults = [];
         
-        // 每5秒自动刷新
-        setInterval(loadData, 5000);
+        // 更新加密调试的参数输入
+        function updateEncryptedParamsInput() {
+            const methodSelect = document.getElementById('encryptedMethodSelect');
+            const paramsInput = document.getElementById('encryptedParamsInput');
+            
+            if (methodSelect.value) {
+                // 根据选择的方法更新参数模板
+                const selectedMethod = allMethods.find(m => m.name === methodSelect.value);
+                if (selectedMethod && selectedMethod.params && selectedMethod.params.length > 0) {
+                    const paramsTemplate = {};
+                    selectedMethod.params.forEach(param => {
+                        paramsTemplate[param.name] = param.example || '';
+                    });
+                    paramsInput.value = JSON.stringify(paramsTemplate, null, 2);
+                } else {
+                    paramsInput.value = '{}';
+                }
+            }
+        }
+        
+        // AES-GCM加密函数（只加密数据，不包含盐值）
+        async function encryptData(data, key) {
+            const dataStr = JSON.stringify(data);
+            const encoder = new TextEncoder();
+            const dataBytes = encoder.encode(dataStr);
+            
+            // 使用原始密钥生成AES密钥
+            const keyBytes = encoder.encode(key);
+            const cryptoKey = await crypto.subtle.importKey(
+                'raw',
+                await crypto.subtle.digest('SHA-256', keyBytes),
+                { name: 'AES-GCM' },
+                false,
+                ['encrypt']
+            );
+            
+            // 使用密钥生成确定性IV（前12字节）
+            const ivSource = await crypto.subtle.digest('SHA-256', keyBytes);
+            const iv = new Uint8Array(ivSource).slice(0, 12);
+            
+            // 加密数据
+            const encrypted = await crypto.subtle.encrypt(
+                { name: 'AES-GCM', iv: iv },
+                cryptoKey,
+                dataBytes
+            );
+            
+            return btoa(String.fromCharCode.apply(null, new Uint8Array(encrypted)));
+        }
+        
+        // AES-GCM解密函数（只使用密钥解密，不使用盐值）
+        async function decryptData(encryptedData, key) {
+            try {
+                // Base64解码
+                const encryptedBytes = new Uint8Array(
+                    atob(encryptedData).split('').map(char => char.charCodeAt(0))
+                );
+                
+                // 使用原始密钥生成AES密钥
+                const encoder = new TextEncoder();
+                const keyBytes = encoder.encode(key);
+                const cryptoKey = await crypto.subtle.importKey(
+                    'raw',
+                    await crypto.subtle.digest('SHA-256', keyBytes),
+                    { name: 'AES-GCM' },
+                    false,
+                    ['decrypt']
+                );
+                
+                // 使用密钥生成确定性IV（前12字节）
+                const ivSource = await crypto.subtle.digest('SHA-256', keyBytes);
+                const iv = new Uint8Array(ivSource).slice(0, 12);
+                
+                // 解密数据
+                const decrypted = await crypto.subtle.decrypt(
+                    { name: 'AES-GCM', iv: iv },
+                    cryptoKey,
+                    encryptedBytes
+                );
+                
+                const decoder = new TextDecoder();
+                const decryptedStr = decoder.decode(decrypted);
+                
+                return JSON.parse(decryptedStr);
+            } catch (error) {
+                throw new Error('解密失败: ' + error.message);
+            }
+        }
+        
+        // 对密钥进行AES加盐处理
+        async function saltKey(key, salt) {
+            const encoder = new TextEncoder();
+            const keyBytes = encoder.encode(key);
+            
+            // 使用盐值生成AES密钥
+            const saltBytes = encoder.encode(salt.toString());
+            const cryptoKey = await crypto.subtle.importKey(
+                'raw',
+                await crypto.subtle.digest('SHA-256', saltBytes),
+                { name: 'AES-GCM' },
+                false,
+                ['encrypt']
+            );
+            
+            // 使用盐值生成确定性IV（前12字节）
+            const ivSource = await crypto.subtle.digest('SHA-256', saltBytes);
+            const iv = new Uint8Array(ivSource).slice(0, 12);
+            
+            // 加密密钥
+            const encrypted = await crypto.subtle.encrypt(
+                { name: 'AES-GCM', iv: iv },
+                cryptoKey,
+                keyBytes
+            );
+            
+            return btoa(String.fromCharCode.apply(null, new Uint8Array(encrypted)));
+        }
+        
+        // 执行加密调试
+        async function executeEncryptedMethod() {
+            const methodSelect = document.getElementById('encryptedMethodSelect');
+            const paramsInput = document.getElementById('encryptedParamsInput');
+            const keyInput = document.getElementById('encryptionKeyInput');
+            const saltInput = document.getElementById('saltDataInput');
+            const timeoutInput = document.getElementById('encryptedTimeoutInput');
+            const executeBtn = document.getElementById('encryptedExecuteBtn');
+            const resultArea = document.getElementById('encryptedResultArea');
+            
+            const method = methodSelect.value;
+            const key = keyInput.value.trim();
+            const salt = parseInt(saltInput.value) || 0;
+            const timeout = parseInt(timeoutInput.value) || 30;
+            
+            if (!method) {
+                alert('请选择方法');
+                return;
+            }
+            
+            if (!key) {
+                alert('请输入加密密钥');
+                return;
+            }
+            
+            let params;
+            try {
+                params = JSON.parse(paramsInput.value || '{}');
+            } catch (error) {
+                alert('参数格式错误: ' + error.message);
+                return;
+            }
+            
+            executeBtn.disabled = true;
+            executeBtn.innerHTML = '<span style="margin-right: 8px;">⏳</span>执行中...';
+            resultArea.style.display = 'block';
+            resultArea.className = 'result-area';
+            resultArea.innerHTML = '<div>🔐 正在加密数据并执行...</div>';
+            
+            try {
+                // 加密参数（不包含盐值）
+                const encryptedParams = await encryptData(params, key);
+                
+                // 对密钥进行加盐处理
+                const saltedKey = await saltKey(key, salt);
+                
+                // 构造加密请求
+                const encryptedRequest = {
+                    key: saltedKey,
+                    method: method,
+                    params: encryptedParams,
+                    crypto: salt.toString()
+                };
+                
+                // 发送加密请求
+                const response = await fetch('/api/encrypted/execute', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(encryptedRequest)
+                });
+                
+                const data = await response.json();
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                resultArea.innerHTML = '<div>⏳ 等待任务完成...</div>';
+                
+                // 轮询任务结果
+                const result = await pollEncryptedTaskResult(data.taskId, timeout * 1000);
+                
+                // 解密结果
+                let decryptedResult;
+                if (result.result) {
+                    try {
+                        decryptedResult = await decryptData(result.result, key);
+                    } catch (error) {
+                        decryptedResult = result.result; // 如果解密失败，显示原始结果
+                    }
+                } else {
+                    decryptedResult = result.result;
+                }
+                
+                // 保存结果
+                encryptedResults.push({
+                    timestamp: new Date().toISOString(),
+                    method: method,
+                    params: params,
+                    encryptedParams: encryptedParams,
+                    key: key,
+                    salt: salt,
+                    result: decryptedResult,
+                    success: true
+                });
+                
+                // 显示结果
+                resultArea.className = 'result-area result-success';
+                resultArea.innerHTML = `
+                    <div><strong>✅ 加密调试执行成功</strong></div>
+                    <div><strong>方法:</strong> ${method}</div>
+                    <div><strong>原始参数:</strong> ${JSON.stringify(params, null, 2)}</div>
+                    <div><strong>加密密钥:</strong> ${key}</div>
+                    <div><strong>加盐数据:</strong> ${salt}</div>
+                    <div><strong>解密结果:</strong> <pre>${JSON.stringify(decryptedResult, null, 2)}</pre></div>
+                `;
+                
+            } catch (error) {
+                // 保存错误结果
+                encryptedResults.push({
+                    timestamp: new Date().toISOString(),
+                    method: method,
+                    params: params,
+                    key: key,
+                    salt: salt,
+                    success: false,
+                    error: error.message
+                });
+                
+                resultArea.className = 'result-area result-error';
+                resultArea.innerHTML = `
+                    <div><strong>❌ 加密调试执行失败</strong></div>
+                    <div><strong>方法:</strong> ${method}</div>
+                    <div><strong>参数:</strong> ${JSON.stringify(params, null, 2)}</div>
+                    <div><strong>错误:</strong> ${error.message}</div>
+                `;
+            } finally {
+                executeBtn.disabled = false;
+                executeBtn.innerHTML = '<span style="margin-right: 8px;">🔐</span>执行加密调试';
+            }
+        }
+        
+        // 轮询加密任务结果
+        async function pollEncryptedTaskResult(taskId, timeoutMs) {
+            const startTime = Date.now();
+            
+            while (Date.now() - startTime < timeoutMs) {
+                try {
+                    const response = await fetch(`/api/encrypted/result/${taskId}`);
+                    const data = await response.json();
+                    
+                    
+                    if (data.status === 'done') {
+                        return data;
+                    } else if (data.status === 'error') {
+                        throw new Error(data.result || '任务执行失败');
+                    }
+                    
+                    // 等待1秒后重试
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                } catch (error) {
+                    if (Date.now() - startTime >= timeoutMs) {
+                        throw new Error('任务超时');
+                    }
+                    throw error;
+                }
+            }
+            
+            throw new Error('任务超时');
+        }
+        
+        // 页面加载时获取数据
+         loadData();
+         
+         // 每5秒自动刷新
+         setInterval(loadData, 5000);
     </script>
     <!-- 方法详情弹框 -->
     <div id="methodModal" class="modal">

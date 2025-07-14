@@ -4,6 +4,7 @@ package goserver
 import (
 	_ "embed"
 	"encoding/json"
+	"log"
 	"math"
 	"net"
 	"net/http"
@@ -11,8 +12,6 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
-
-	"github.com/go-enols/go-log"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
@@ -36,17 +35,19 @@ const (
 var HTML string
 
 type Scheduler struct {
-	workers   sync.Map // map[string]*Worker
-	tasks     sync.Map // map[string]*Task
-	mu        sync.RWMutex
-	upgrader  websocket.Upgrader
-	taskQueue chan *Task
+	workers        sync.Map // map[string]*Worker
+	tasks          sync.Map // map[string]*Task
+	encryptedTasks map[string]*EncryptedTask // 加密任务存储
+	mu             sync.RWMutex
+	upgrader       websocket.Upgrader
+	taskQueue      chan *Task
 }
 
 func NewScheduler() *Scheduler {
 	return &Scheduler{
-		upgrader:  websocket.Upgrader{CheckOrigin: func(r *http.Request) bool { return true }},
-		taskQueue: make(chan *Task, 100),
+		encryptedTasks: make(map[string]*EncryptedTask),
+		upgrader:       websocket.Upgrader{CheckOrigin: func(r *http.Request) bool { return true }},
+		taskQueue:      make(chan *Task, 100),
 	}
 }
 
@@ -219,6 +220,8 @@ func (s *Scheduler) processTaskResult(msg struct {
 }) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	
+	// 处理普通任务结果
 	if value, exists := s.tasks.Load(msg.TaskID); exists {
 		task := value.(*Task)
 		if msg.Error != "" {
@@ -231,6 +234,110 @@ func (s *Scheduler) processTaskResult(msg struct {
 		if task.Worker != nil {
 			atomic.AddInt64(&task.Worker.Count, -1)
 		}
+		return
+	}
+	
+	// 处理加密任务结果
+	if encryptedTask, exists := s.encryptedTasks[msg.TaskID]; exists {
+		if msg.Error != "" {
+			encryptedTask.Status = TaskStatusError
+			encryptedTask.Result = msg.Error
+		} else {
+			encryptedTask.Status = TaskStatusDone
+			encryptedTask.Result = msg.Result
+		}
+		if encryptedTask.Worker != nil {
+			atomic.AddInt64(&encryptedTask.Worker.Count, -1)
+		}
+	}
+}
+
+func (s *Scheduler) handleEncryptedExecute(w http.ResponseWriter, r *http.Request) {
+	var req EncryptedRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	encryptedTask := &EncryptedTask{
+		ID:      uuid.New().String(),
+		Key:     req.Key,
+		Method:  req.Method,
+		Params:  req.Params,
+		Crypto:  req.Crypto,
+		Status:  TaskStatusPending,
+		Created: time.Now(),
+	}
+
+	s.mu.Lock()
+	s.encryptedTasks[encryptedTask.ID] = encryptedTask
+
+	// 选择可用的Worker
+	var selectedWorker *Worker
+	minCount := math.MaxInt
+
+	s.workers.Range(func(key, value interface{}) bool {
+		worker := value.(*Worker)
+		lastPingNano := atomic.LoadInt64(&worker.LastPing)
+		lastPing := time.Unix(0, lastPingNano)
+		if time.Since(lastPing) > 60*time.Second {
+			return true
+		}
+
+		for _, method := range worker.Methods {
+			if method.Name == req.Method {
+				workerCount := atomic.LoadInt64(&worker.Count)
+				if workerCount < int64(minCount) {
+					selectedWorker = worker
+					minCount = int(workerCount)
+				}
+				break
+			}
+		}
+		return true
+	})
+
+	if selectedWorker == nil {
+		encryptedTask.Status = TaskStatusError
+		encryptedTask.Result = "服务不可用"
+		s.mu.Unlock()
+	} else {
+		atomic.AddInt64(&selectedWorker.Count, 1)
+		encryptedTask.Worker = selectedWorker
+		encryptedTask.Status = TaskStatusProcessing
+		s.mu.Unlock()
+
+		// 将加密数据原封不动地发送给worker
+		selectedWorker.ConnMu.Lock()
+		err := selectedWorker.Conn.WriteJSON(map[string]interface{}{
+			"type":   "encrypted_task",
+			"taskId": encryptedTask.ID,
+			"key":    encryptedTask.Key,
+			"method": encryptedTask.Method,
+			"params": encryptedTask.Params,
+			"crypto": encryptedTask.Crypto,
+		})
+		selectedWorker.ConnMu.Unlock()
+		if err != nil {
+			atomic.AddInt64(&selectedWorker.Count, -1)
+			s.mu.Lock()
+			encryptedTask.Status = TaskStatusError
+			encryptedTask.Result = "Worker连接异常: " + err.Error()
+			encryptedTask.Worker = nil
+			s.mu.Unlock()
+			log.Printf("Failed to send encrypted task %s to worker %s: %v", encryptedTask.ID, selectedWorker.ID, err)
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	s.mu.RLock()
+	status := encryptedTask.Status
+	s.mu.RUnlock()
+	if err := json.NewEncoder(w).Encode(map[string]string{
+		"taskId": encryptedTask.ID,
+		"status": string(status),
+	}); err != nil {
+		log.Printf("Failed to encode response: %v", err)
 	}
 }
 
@@ -322,6 +429,27 @@ func (s *Scheduler) handleExecute(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewEncoder(w).Encode(map[string]string{
 		"taskId": task.ID,
 		"status": string(status),
+	}); err != nil {
+		log.Printf("Failed to encode response: %v", err)
+	}
+}
+
+func (s *Scheduler) handleEncryptedResult(w http.ResponseWriter, r *http.Request) {
+	taskID := r.URL.Path[len("/api/encrypted/result/"):]
+
+	s.mu.RLock()
+	encryptedTask, exists := s.encryptedTasks[taskID]
+	s.mu.RUnlock()
+	if !exists {
+		http.Error(w, "encrypted task not found", http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(map[string]interface{}{
+		"taskId": encryptedTask.ID,
+		"status": encryptedTask.Status,
+		"result": encryptedTask.Result,
 	}); err != nil {
 		log.Printf("Failed to encode response: %v", err)
 	}
@@ -425,7 +553,9 @@ func (s *Scheduler) Start(addr, key string) {
 	http.HandleFunc("/", s.handleUI)
 	http.HandleFunc("/api/worker/connect/"+key, s.handleWorkerConnection)
 	http.HandleFunc("/api/execute", s.handleExecute)
+	http.HandleFunc("/api/encrypted/execute", s.handleEncryptedExecute)
 	http.HandleFunc("/api/result/", s.handleResult)
+	http.HandleFunc("/api/encrypted/result/", s.handleEncryptedResult)
 	http.HandleFunc("/api/status", s.handleStatus)
 
 	server := &http.Server{

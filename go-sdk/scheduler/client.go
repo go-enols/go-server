@@ -38,6 +38,14 @@ type ExecuteRequest struct {
 	Params interface{} `json:"params"`
 }
 
+// ExecuteEncryptedRequest represents an encrypted task execution request.
+type ExecuteEncryptedRequest struct {
+	Method string `json:"method"`
+	Params string `json:"params"`
+	Key    string `json:"key"`
+	Crypto string `json:"crypto"`
+}
+
 // ResultResponse represents a task result response.
 type ResultResponse struct {
 	TaskID string          `json:"taskId"`
@@ -57,6 +65,55 @@ func (c *Client) Execute(method string, params interface{}) (*ResultResponse, er
 
 	ctx := context.Background()
 	req, err := http.NewRequestWithContext(ctx, "POST", c.baseURL+"/api/execute", bytes.NewBuffer(requestBody))
+	if err != nil {
+		return nil, fmt.Errorf("create request failed: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("HTTP request failed: %w", err)
+	}
+	defer func() {
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			log.Printf("Failed to close response body: %v", closeErr)
+		}
+	}()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("unexpected status %d: %s", resp.StatusCode, string(body))
+	}
+
+	var response ResultResponse
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return nil, fmt.Errorf("decode response failed: %w", err)
+	}
+
+	return &response, nil
+}
+
+// ExecuteEncrypted executes an encrypted task with the given method, key, salt and parameters.
+func (c *Client) ExecuteEncrypted(method, key string, salt int, params interface{}) (*ResultResponse, error) {
+	// 序列化参数
+	paramsBytes, err := json.Marshal(params)
+	if err != nil {
+		return nil, fmt.Errorf("marshal params failed: %w", err)
+	}
+
+	// 构建加密请求
+	requestBody, err := json.Marshal(ExecuteEncryptedRequest{
+		Method: method,
+		Params: string(paramsBytes),
+		Key:    key,
+		Crypto: fmt.Sprintf("%d", salt),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("marshal request failed: %w", err)
+	}
+
+	ctx := context.Background()
+	req, err := http.NewRequestWithContext(ctx, "POST", c.baseURL+"/api/execute-encrypted", bytes.NewBuffer(requestBody))
 	if err != nil {
 		return nil, fmt.Errorf("create request failed: %w", err)
 	}

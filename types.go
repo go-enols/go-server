@@ -46,3 +46,24 @@ type MethodInfo struct {
 	Name string   `json:"name"`
 	Docs []string `json:"docs"`
 }
+
+// EncryptedRequest 端到端加密请求结构
+type EncryptedRequest struct {
+	Key    string `json:"key"`    // 用户加盐后的密钥
+	Method string `json:"method"` // 需要调用的方法名
+	Params string `json:"params"` // 用户加密后的调用参数
+	Crypto string `json:"crypto"` // 用户加盐的实际数据(如位运算)
+}
+
+// EncryptedTask 端到端加密任务结构(调度器只做中转)
+type EncryptedTask struct {
+	ID      string
+	Key     string // 用户加盐后的密钥(原封不动传递)
+	Method  string // 方法名(明文，用于路由)
+	Params  string // 加密后的参数(原封不动传递)
+	Crypto  string // 加盐数据(原封不动传递)
+	Result  any
+	Status  TaskStatus
+	Worker  *Worker
+	Created time.Time
+}
