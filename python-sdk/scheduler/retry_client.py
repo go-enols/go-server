@@ -53,6 +53,33 @@ class RetryClient:
 
         raise Exception(f"After {self.max_retries} retries: {last_error}")
 
+    def execute_encrypted_with_retry(self, method: str, key: str, salt: int, params: Any) -> ResultResponse:
+        """Execute encrypted task with automatic retry on failure
+
+        Args:
+            method: Method name to execute
+            key: Encryption key
+            salt: Salt value for encryption
+            params: Parameters for the method
+
+        Returns:
+            ResultResponse with task ID and initial status
+
+        Raises:
+            Exception: If all retry attempts fail
+        """
+        last_error = None
+
+        for attempt in range(self.max_retries):
+            try:
+                return self.client.execute_encrypted(method, key, salt, params)
+            except Exception as e:
+                last_error = e
+                if attempt < self.max_retries - 1:  # Don't sleep on last attempt
+                    time.sleep(self.retry_delay)
+
+        raise Exception(f"After {self.max_retries} retries: {last_error}")
+
     def execute_sync_with_retry(
         self, method: str, params: Any, timeout: float = 30.0
     ) -> ResultResponse:

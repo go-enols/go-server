@@ -90,6 +90,46 @@ class SchedulerClient {
   }
 
   /**
+   * 执行加密任务
+   * @param {string} method - 方法名
+   * @param {string} key - 加密密钥
+   * @param {number} salt - 盐值
+   * @param {any} params - 参数
+   * @returns {Promise<{taskId: string, status: string}>}
+   */
+  async executeEncrypted(method, key, salt, params) {
+    try {
+      const requestBody = {
+        method: method,
+        params: JSON.stringify(params),
+        key: key,
+        crypto: salt.toString(),
+      };
+
+      const response = await this.httpClient.post(
+        `${this.baseURL}/api/execute-encrypted`,
+        requestBody
+      );
+
+      return response.data;
+    } catch (error) {
+      if (error.response) {
+        const errorData =
+          typeof error.response.data === 'string'
+            ? error.response.data
+            : JSON.stringify(error.response.data);
+        throw new Error(
+          `HTTP request failed with status ${error.response.status}: ${errorData}`
+        );
+      } else if (error.request) {
+        throw new Error('HTTP request failed: No response received');
+      } else {
+        throw new Error(`HTTP request failed: ${error.message}`);
+      }
+    }
+  }
+
+  /**
    * 同步执行任务（带轮询）
    * @param {string} method - 方法名
    * @param {any} params - 参数

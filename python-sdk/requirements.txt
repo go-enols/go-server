@@ -6,5 +6,8 @@ requests>=2.25.0
 # WebSocket client library
 websocket-client>=1.0.0
 
+# Cryptography library for encryption support
+cryptography>=3.0.0
+
 # Type hints support for older Python versions
 typing-extensions>=3.7.4; python_version<"3.8"

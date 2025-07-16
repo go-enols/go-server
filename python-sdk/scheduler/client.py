@@ -110,6 +110,47 @@ class SchedulerClient:
         except (KeyError, json.JSONDecodeError) as e:
             raise ValueError(f"Invalid response format: {e}")
 
+    def execute_encrypted(self, method: str, key: str, salt: int, params: Any) -> ResultResponse:
+        """Execute an encrypted task
+
+        Args:
+            method: Method name to execute
+            key: Encryption key
+            salt: Salt value for encryption
+            params: Parameters for the method
+
+        Returns:
+            ResultResponse with task ID and initial status
+
+        Raises:
+            requests.RequestException: If HTTP request fails
+            ValueError: If response format is invalid
+        """
+        request_data = {
+            "method": method,
+            "key": key,
+            "salt": salt,
+            "params": params
+        }
+
+        try:
+            response = self.session.post(
+                f"{self.base_url}/api/execute-encrypted",
+                json=request_data,
+                headers={"Content-Type": "application/json"},
+            )
+            response.raise_for_status()
+
+            data = response.json()
+            return ResultResponse(
+                task_id=data["taskId"], status=data["status"], result=data.get("result")
+            )
+
+        except requests.RequestException as e:
+            raise requests.RequestException(f"HTTP request failed: {e}")
+        except (KeyError, json.JSONDecodeError) as e:
+            raise ValueError(f"Invalid response format: {e}")
+
     def execute_sync(
         self, method: str, params: Any, timeout: float = 30.0
     ) -> ResultResponse:

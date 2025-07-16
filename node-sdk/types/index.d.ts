@@ -35,6 +35,15 @@ export interface TaskMessage {
   params: any;
 }
 
+export interface EncryptedTaskMessage {
+  type: 'encrypted_task';
+  taskId: string;
+  method: string;
+  params: string;
+  key: string;
+  crypto: string;
+}
+
 export interface PingMessage {
   type: 'ping';
 }
@@ -52,6 +61,7 @@ export interface ResultMessage {
 
 export type WebSocketMessage =
   | TaskMessage
+  | EncryptedTaskMessage
   | PingMessage
   | PongMessage
   | ResultMessage;
@@ -62,6 +72,7 @@ export declare class SchedulerClient {
   constructor(baseURL: string, timeout?: number);
 
   execute(method: string, params: any): Promise<ExecuteResponse>;
+  executeEncrypted(method: string, key: string, salt: number, params: any): Promise<ExecuteResponse>;
   getResult(taskId: string): Promise<ResultResponse>;
   executeSync(
     method: string,
@@ -79,10 +90,25 @@ export declare class Worker {
   getMethodsWithDocs(): MethodInfo[];
 }
 
+export declare class RetryClient extends SchedulerClient {
+  constructor(baseURL: string, maxRetries?: number, retryDelay?: number, timeout?: number);
+
+  executeWithRetry(method: string, params: any): Promise<ExecuteResponse>;
+  executeEncryptedWithRetry(method: string, key: string, salt: number, params: any): Promise<ExecuteResponse>;
+}
+
 export declare function call(
   host: string,
   method: string,
   params: any
 ): Promise<any>;
 
-export { SchedulerClient, Worker, call };
+export declare function callEncrypted(
+  host: string,
+  method: string,
+  key: string,
+  salt: number,
+  params: any
+): Promise<any>;
+
+export { SchedulerClient, RetryClient, Worker, call, callEncrypted };

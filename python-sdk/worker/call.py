@@ -80,6 +80,91 @@ def call_async(host: str, method: str, params: Any) -> str:
         return response.task_id
 
 
+def call_encrypted(
+    host: str,
+    method: str,
+    key: str,
+    salt: int,
+    params: Any,
+    out_type: Optional[Type[T]] = None,
+    timeout: float = 30.0,
+) -> Optional[T]:
+    """Call a remote method with encryption
+
+    Args:
+        host: Scheduler host URL
+        method: Method name to call
+        key: Encryption key
+        salt: Salt value for encryption
+        params: Parameters to pass to the method
+        out_type: Expected return type (for type hints)
+        timeout: Timeout for the operation in seconds
+
+    Returns:
+        Result from the method call, optionally typed
+
+    Raises:
+        Exception: If the call fails or times out
+
+    Example:
+        result = call_encrypted(
+            "http://localhost:8080", 
+            "secure_add", 
+            "my_secret_key", 
+            12345,
+            {"a": 1, "b": 2}
+        )
+    """
+    with SchedulerClient(host) as client:
+        # Execute the encrypted task
+        response = client.execute_encrypted(method, key, salt, params)
+        task_id = response.task_id
+        
+        # Poll for result with timeout
+        import time
+        start_time = time.time()
+        while time.time() - start_time < timeout:
+            result = client.get_result(task_id)
+            if result.status == "completed":
+                return result.result
+            elif result.status == "error":
+                raise Exception(str(result.result))
+            
+            time.sleep(0.1)
+        
+        raise TimeoutError(f"Encrypted task {task_id} did not complete within {timeout} seconds")
+
+
+def call_encrypted_async(host: str, method: str, key: str, salt: int, params: Any) -> str:
+    """Call a remote method asynchronously with encryption and return task ID
+
+    Args:
+        host: Scheduler host URL
+        method: Method name to call
+        key: Encryption key
+        salt: Salt value for encryption
+        params: Parameters to pass to the method
+
+    Returns:
+        Task ID for tracking the async operation
+
+    Raises:
+        Exception: If the call submission fails
+
+    Example:
+        task_id = call_encrypted_async(
+            "http://localhost:8080", 
+            "secure_process", 
+            "my_secret_key",
+            12345,
+            {"data": "..."}
+        )
+    """
+    with SchedulerClient(host) as client:
+        response = client.execute_encrypted(method, key, salt, params)
+        return response.task_id
+
+
 def get_result(
     host: str, task_id: str, out_type: Optional[Type[T]] = None
 ) -> Optional[T]:

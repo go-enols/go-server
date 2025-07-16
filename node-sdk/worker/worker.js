@@ -1,5 +1,6 @@
 const WebSocket = require('ws');
 const EventEmitter = require('events');
+const crypto = require('crypto');
 
 class Worker extends EventEmitter {
   constructor(config) {
@@ -127,6 +128,15 @@ class Worker extends EventEmitter {
         case 'task':
           this.handleTask(message.taskId, message.method, message.params);
           break;
+        case 'encrypted_task':
+          this.handleEncryptedTask(
+            message.taskId,
+            message.method,
+            message.params,
+            message.key,
+            message.crypto
+          );
+          break;
         case 'ping':
           this.sendPong();
           break;
@@ -245,6 +255,126 @@ class Worker extends EventEmitter {
     }
 
     console.log('Worker stopped');
+  }
+
+  /**
+   * 处理加密任务
+   */
+  async handleEncryptedTask(taskId, method, encryptedParams, key, cryptoSalt) {
+    try {
+      const handler = this.methods.get(method);
+      if (!handler) {
+        this.sendResult(taskId, null, new Error('Method not found'));
+        return;
+      }
+
+      // 解密参数
+      const decryptedParams = this.decryptData(encryptedParams, key, cryptoSalt);
+      const params = JSON.parse(decryptedParams);
+
+      // 调用注册的方法
+      const result = await handler(params);
+
+      // 加密结果
+      const encryptedResult = this.encryptData(JSON.stringify(result), key, cryptoSalt);
+      this.sendResult(taskId, encryptedResult, null);
+    } catch (error) {
+      this.sendResult(taskId, null, error);
+    }
+  }
+
+  /**
+   * AES-GCM加密数据
+   */
+  encryptData(data, saltedKey, cryptoSalt) {
+    // 还原原始密钥
+    const originalKey = this.unsaltKey(saltedKey, cryptoSalt);
+    
+    // 使用原始密钥生成AES密钥
+    const hash = crypto.createHash('sha256').update(originalKey).digest();
+    
+    // 使用密钥生成确定性nonce（前12字节）
+    const nonce = hash.slice(0, 12);
+    
+    // 创建cipher
+    const cipher = crypto.createCipherGCM('aes-256-gcm');
+    cipher.setIV(nonce);
+    
+    // 加密数据
+    let encrypted = cipher.update(data, 'utf8', 'base64');
+    encrypted += cipher.final('base64');
+    
+    // 获取认证标签
+    const authTag = cipher.getAuthTag();
+    
+    // 合并加密数据和认证标签
+    const combined = Buffer.concat([
+      Buffer.from(encrypted, 'base64'),
+      authTag
+    ]);
+    
+    return combined.toString('base64');
+  }
+
+  /**
+   * AES-GCM解密数据
+   */
+  decryptData(encryptedData, saltedKey, cryptoSalt) {
+    // 还原原始密钥
+    const originalKey = this.unsaltKey(saltedKey, cryptoSalt);
+    
+    // 解码base64
+    const combined = Buffer.from(encryptedData, 'base64');
+    
+    // 分离加密数据和认证标签（最后16字节是认证标签）
+    const encrypted = combined.slice(0, -16);
+    const authTag = combined.slice(-16);
+    
+    // 使用原始密钥生成AES密钥
+    const hash = crypto.createHash('sha256').update(originalKey).digest();
+    
+    // 使用密钥生成确定性nonce（前12字节）
+    const nonce = hash.slice(0, 12);
+    
+    // 创建decipher
+    const decipher = crypto.createDecipherGCM('aes-256-gcm');
+    decipher.setIV(nonce);
+    decipher.setAuthTag(authTag);
+    
+    // 解密数据
+    let decrypted = decipher.update(encrypted, null, 'utf8');
+    decrypted += decipher.final('utf8');
+    
+    return decrypted;
+  }
+
+  /**
+   * 还原加盐密钥
+   */
+  unsaltKey(saltedKey, cryptoSalt) {
+    // 解码base64
+    const combined = Buffer.from(saltedKey, 'base64');
+    
+    // 分离加密数据和认证标签（最后16字节是认证标签）
+    const encrypted = combined.slice(0, -16);
+    const authTag = combined.slice(-16);
+    
+    // 使用crypto作为盐值生成AES密钥
+    const hash = crypto.createHash('sha256').update(cryptoSalt).digest();
+    
+    // 使用盐值生成确定性nonce（前12字节）
+    const nonce = hash.slice(0, 12);
+    
+    // 创建decipher
+    const decipher = crypto.createDecipherGCM('aes-256-gcm');
+    decipher.setIV(nonce);
+    decipher.setAuthTag(authTag);
+    
+    // 解密密钥
+    let decrypted = decipher.update(encrypted, null, 'utf8');
+    decrypted += decipher.final('utf8');
+    
+    return decrypted;
   }
 
   /**
