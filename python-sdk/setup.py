@@ -16,12 +16,13 @@ except FileNotFoundError:
 requirements = [
     "requests>=2.25.0",
     "websocket-client>=1.0.0",
+    "cryptography>=3.0.0",
     "typing-extensions>=3.7.4; python_version<'3.8'",
 ]
 
 setup(
     name="go-server-sdk",
-    version="1.4.4",
+    version="1.5.0",
     author="enols",
     author_email="2575169674@qq.com",
     description="Python SDK for go-server distributed task scheduling system",
