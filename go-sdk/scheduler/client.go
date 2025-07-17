@@ -180,6 +180,44 @@ func (c *Client) GetResult(taskID string) (*ResultResponse, error) {
 	return &response, nil
 }
 
+// GetResult retrieves the result of a task by its ID.
+func (c *Client) GetResultEncrypted(taskID string) (*ResultResponse, error) {
+	ctx := context.Background()
+	req, err := http.NewRequestWithContext(ctx, "GET", c.baseURL+"/api/encrypted/result/"+taskID, http.NoBody)
+	if err != nil {
+		return nil, fmt.Errorf("create request failed: %w", err)
+	}
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("HTTP request failed: %w", err)
+	}
+	defer func() {
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			log.Printf("Failed to close response body: %v", closeErr)
+		}
+	}()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("unexpected status %d: %s", resp.StatusCode, string(body))
+	}
+
+	var response ResultResponse
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return nil, fmt.Errorf("decode response failed: %w", err)
+	}
+
+	switch response.Status {
+	case "pending", "processing":
+		time.Sleep(1 * time.Second)
+		return c.GetResult(taskID)
+	case TaskStatusError:
+		return nil, errors.New(string(response.Result))
+	}
+	return &response, nil
+}
+
 // ExecuteSync executes a task synchronously with polling.
 func (c *Client) ExecuteSync(method string, params interface{}, timeout time.Duration) (*ResultResponse, error) {
 	// 提交任务

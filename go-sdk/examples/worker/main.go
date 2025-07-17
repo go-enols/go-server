@@ -10,7 +10,7 @@ import (
 func main() {
 	// 1. 创建Worker配置
 	config := worker.Config{
-		SchedulerURL: "ws://localhost:8080/api/worker/connect/123",
+		SchedulerURL: "ws://localhost:8080/api/worker/connect/123456",
 		WorkerGroup:  "math",
 		MaxRetry:     5,
 		PingInterval: 5,
