@@ -25,7 +25,7 @@ func Call(host, method string, params, out interface{}, encryptionKey ...string)
 		}
 	}
 	client := scheduler.NewSchedulerClient(host)
-	
+
 	// 如果提供了加密密钥，使用加密方式调用
 	if len(encryptionKey) > 0 && encryptionKey[0] != "" {
 		// 使用默认盐值或可以扩展为可配置
@@ -37,7 +37,7 @@ func Call(host, method string, params, out interface{}, encryptionKey ...string)
 			return errors.New(string(res.Result))
 		}
 		// 轮询结果
-		result, err := client.GetResult(res.TaskID)
+		result, err := client.GetResultEncrypted(res.TaskID)
 		if err != nil {
 			return err
 		}
@@ -49,7 +49,7 @@ func Call(host, method string, params, out interface{}, encryptionKey ...string)
 		}
 		return nil
 	}
-	
+
 	// 普通调用
 	res, err := client.Execute(method, params)
 	if err != nil {
