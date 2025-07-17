@@ -327,8 +327,12 @@ func (c *Client) GetResultEncrypted(taskID, key string, salt int) (*ResultRespon
 	case TaskStatusDone:
 		// 解密结果数据
 		if response.Result != nil {
+			var res string
+			if err := json.Unmarshal(response.Result, &res); err != nil {
+				return nil, err
+			}
 			// 使用原始密钥解密数据（不使用加盐后的密钥）
-			decryptedResult, err := decryptData(string(response.Result), key)
+			decryptedResult, err := decryptData(res, key)
 			if err != nil {
 				return nil, fmt.Errorf("decrypt result failed: %w", err)
 			}
