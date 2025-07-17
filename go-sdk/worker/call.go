@@ -37,7 +37,7 @@ func Call(host, method string, params, out interface{}, encryptionKey ...string)
 			return errors.New(string(res.Result))
 		}
 		// 轮询结果
-		result, err := client.GetResultEncrypted(res.TaskID)
+		result, err := client.GetResultEncrypted(res.TaskID, encryptionKey[0], 12345)
 		if err != nil {
 			return err
 		}

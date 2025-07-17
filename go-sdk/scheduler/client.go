@@ -100,6 +100,42 @@ func saltKey(key string, salt int) (string, error) {
 	return base64.StdEncoding.EncodeToString(ciphertext), nil
 }
 
+// decryptData decrypts data using AES-GCM with a deterministic IV derived from the key
+func decryptData(encryptedData, key string) (json.RawMessage, error) {
+	// Base64解码
+	ciphertext, err := base64.StdEncoding.DecodeString(encryptedData)
+	if err != nil {
+		return nil, fmt.Errorf("base64 decode failed: %w", err)
+	}
+
+	// 使用SHA-256哈希密钥
+	keyHash := sha256.Sum256([]byte(key))
+
+	// 创建AES cipher
+	block, err := aes.NewCipher(keyHash[:])
+	if err != nil {
+		return nil, fmt.Errorf("create cipher failed: %w", err)
+	}
+
+	// 创建GCM
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return nil, fmt.Errorf("create GCM failed: %w", err)
+	}
+
+	// 使用密钥生成确定性IV（前12字节）
+	ivHash := sha256.Sum256([]byte(key))
+	iv := ivHash[:gcm.NonceSize()]
+
+	// 解密数据
+	plaintext, err := gcm.Open(nil, iv, ciphertext, nil)
+	if err != nil {
+		return nil, fmt.Errorf("decrypt failed: %w", err)
+	}
+
+	return json.RawMessage(plaintext), nil
+}
+
 // ExecuteRequest represents a task execution request.
 type ExecuteRequest struct {
 	Method string      `json:"method"`
@@ -254,8 +290,8 @@ func (c *Client) GetResult(taskID string) (*ResultResponse, error) {
 	return &response, nil
 }
 
-// GetResult retrieves the result of a task by its ID.
-func (c *Client) GetResultEncrypted(taskID string) (*ResultResponse, error) {
+// GetResultEncrypted retrieves and decrypts the result of an encrypted task by its ID.
+func (c *Client) GetResultEncrypted(taskID, key string, salt int) (*ResultResponse, error) {
 	ctx := context.Background()
 	req, err := http.NewRequestWithContext(ctx, "GET", c.baseURL+"/api/encrypted/result/"+taskID, http.NoBody)
 	if err != nil {
@@ -285,9 +321,19 @@ func (c *Client) GetResultEncrypted(taskID string) (*ResultResponse, error) {
 	switch response.Status {
 	case "pending", "processing":
 		time.Sleep(1 * time.Second)
-		return c.GetResult(taskID)
+		return c.GetResultEncrypted(taskID, key, salt)
 	case TaskStatusError:
 		return nil, errors.New(string(response.Result))
+	case TaskStatusDone:
+		// 解密结果数据
+		if response.Result != nil {
+			// 使用原始密钥解密数据（不使用加盐后的密钥）
+			decryptedResult, err := decryptData(string(response.Result), key)
+			if err != nil {
+				return nil, fmt.Errorf("decrypt result failed: %w", err)
+			}
+			response.Result = decryptedResult
+		}
 	}
 	return &response, nil
 }
@@ -304,6 +350,36 @@ func (c *Client) ExecuteSync(method string, params interface{}, timeout time.Dur
 	start := time.Now()
 	for time.Since(start) < timeout {
 		resultResp, err := c.GetResult(execResp.TaskID)
+		if err != nil {
+			return nil, err
+		}
+
+		switch resultResp.Status {
+		case TaskStatusDone:
+			return resultResp, nil
+		case TaskStatusError:
+			return nil, errors.New(string(resultResp.Result))
+			// "pending" 或 "processing" 状态继续等待
+		}
+
+		time.Sleep(500 * time.Millisecond)
+	}
+
+	return nil, errors.New("timeout waiting for task completion")
+}
+
+// ExecuteSyncEncrypted executes an encrypted task synchronously with polling and decryption.
+func (c *Client) ExecuteSyncEncrypted(method, key string, salt int, params interface{}, timeout time.Duration) (*ResultResponse, error) {
+	// 提交加密任务
+	execResp, err := c.ExecuteEncrypted(method, key, salt, params)
+	if err != nil {
+		return nil, fmt.Errorf("execute encrypted failed: %w", err)
+	}
+
+	// 轮询并解密结果
+	start := time.Now()
+	for time.Since(start) < timeout {
+		resultResp, err := c.GetResultEncrypted(execResp.TaskID, key, salt)
 		if err != nil {
 			return nil, err
 		}
