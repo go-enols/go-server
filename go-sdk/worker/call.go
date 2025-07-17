@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math/rand"
 	"reflect"
+	"time"
 
 	"github.com/go-enols/go-server/go-sdk/scheduler"
 )
@@ -28,8 +30,9 @@ func Call(host, method string, params, out interface{}, encryptionKey ...string)
 
 	// 如果提供了加密密钥，使用加密方式调用
 	if len(encryptionKey) > 0 && encryptionKey[0] != "" {
-		// 使用默认盐值或可以扩展为可配置
-		res, err := client.ExecuteEncrypted(method, encryptionKey[0], 12345, params)
+		// 生成随机盐值
+		salt := rand.New(rand.NewSource(time.Now().UnixNano())).Intn(999999) + 100000 // 生成6位随机数
+		res, err := client.ExecuteEncrypted(method, encryptionKey[0], salt, params)
 		if err != nil {
 			return err
 		}
@@ -37,7 +40,7 @@ func Call(host, method string, params, out interface{}, encryptionKey ...string)
 			return errors.New(string(res.Result))
 		}
 		// 轮询结果
-		result, err := client.GetResultEncrypted(res.TaskID, encryptionKey[0], 12345)
+		result, err := client.GetResultEncrypted(res.TaskID, encryptionKey[0], salt)
 		if err != nil {
 			return err
 		}
