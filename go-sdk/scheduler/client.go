@@ -113,7 +113,7 @@ func (c *Client) ExecuteEncrypted(method, key string, salt int, params interface
 	}
 
 	ctx := context.Background()
-	req, err := http.NewRequestWithContext(ctx, "POST", c.baseURL+"/api/execute-encrypted", bytes.NewBuffer(requestBody))
+	req, err := http.NewRequestWithContext(ctx, "POST", c.baseURL+"/api/encrypted/execute", bytes.NewBuffer(requestBody))
 	if err != nil {
 		return nil, fmt.Errorf("create request failed: %w", err)
 	}
