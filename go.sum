@@ -1,5 +1,7 @@
 github.com/go-enols/go-log v0.0.7 h1:9Lf8vEjJU+CBJ32gGCsWr/GlIWzyapmgqCtwNm6kOGA=
 github.com/go-enols/go-log v0.0.7/go.mod h1:jXXj5EeeM+hqFsZNGlmA8QS/DCO6TwhBOxeBu+qQx7Q=
+github.com/go-enols/go-log v0.1.0 h1:yHL2eAGtF72/hbzyFMxe9orsBA5OXmLoMNRr0I9HB9M=
+github.com/go-enols/go-log v0.1.0/go.mod h1:jXXj5EeeM+hqFsZNGlmA8QS/DCO6TwhBOxeBu+qQx7Q=
 github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
 github.com/google/uuid v1.6.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/gorilla/websocket v1.5.3 h1:saDtZ6Pbx/0u+bgYQ3q96pZgCzfhKXGPqt7kZ72aNNg=
