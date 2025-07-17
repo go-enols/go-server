@@ -4,6 +4,10 @@ package scheduler
 import (
 	"bytes"
 	"context"
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/sha256"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -30,6 +34,70 @@ func NewSchedulerClient(baseURL string) *Client {
 			Timeout: 30 * time.Second,
 		},
 	}
+}
+
+// encryptData encrypts data using AES-GCM with a deterministic IV derived from the key
+func encryptData(data interface{}, key string) (string, error) {
+	// 序列化数据
+	dataBytes, err := json.Marshal(data)
+	if err != nil {
+		return "", fmt.Errorf("marshal data failed: %w", err)
+	}
+
+	// 使用SHA-256哈希密钥
+	keyHash := sha256.Sum256([]byte(key))
+
+	// 创建AES cipher
+	block, err := aes.NewCipher(keyHash[:])
+	if err != nil {
+		return "", fmt.Errorf("create cipher failed: %w", err)
+	}
+
+	// 创建GCM
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return "", fmt.Errorf("create GCM failed: %w", err)
+	}
+
+	// 使用密钥生成确定性IV（前12字节）
+	ivHash := sha256.Sum256([]byte(key))
+	iv := ivHash[:gcm.NonceSize()]
+
+	// 加密数据
+	ciphertext := gcm.Seal(nil, iv, dataBytes, nil)
+
+	// 返回Base64编码的结果
+	return base64.StdEncoding.EncodeToString(ciphertext), nil
+}
+
+// saltKey encrypts the key using the salt as AES key
+func saltKey(key string, salt int) (string, error) {
+	// 使用盐值生成SHA-256哈希作为AES密钥
+	saltStr := fmt.Sprintf("%d", salt)
+	saltHash := sha256.Sum256([]byte(saltStr))
+
+	// 创建AES cipher
+	block, err := aes.NewCipher(saltHash[:])
+	if err != nil {
+		return "", fmt.Errorf("create cipher failed: %w", err)
+	}
+
+	// 创建GCM
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return "", fmt.Errorf("create GCM failed: %w", err)
+	}
+
+	// 使用盐值生成确定性IV（前12字节）
+	ivHash := sha256.Sum256([]byte(saltStr))
+	iv := ivHash[:gcm.NonceSize()]
+
+	// 加密密钥
+	keyBytes := []byte(key)
+	ciphertext := gcm.Seal(nil, iv, keyBytes, nil)
+
+	// 返回Base64编码的结果
+	return base64.StdEncoding.EncodeToString(ciphertext), nil
 }
 
 // ExecuteRequest represents a task execution request.
@@ -95,17 +163,23 @@ func (c *Client) Execute(method string, params interface{}) (*ResultResponse, er
 
 // ExecuteEncrypted executes an encrypted task with the given method, key, salt and parameters.
 func (c *Client) ExecuteEncrypted(method, key string, salt int, params interface{}) (*ResultResponse, error) {
-	// 序列化参数
-	paramsBytes, err := json.Marshal(params)
+	// 加密参数
+	encryptedParams, err := encryptData(params, key)
 	if err != nil {
-		return nil, fmt.Errorf("marshal params failed: %w", err)
+		return nil, fmt.Errorf("encrypt params failed: %w", err)
+	}
+
+	// 对密钥进行加盐处理
+	saltedKey, err := saltKey(key, salt)
+	if err != nil {
+		return nil, fmt.Errorf("salt key failed: %w", err)
 	}
 
 	// 构建加密请求
 	requestBody, err := json.Marshal(ExecuteEncryptedRequest{
 		Method: method,
-		Params: string(paramsBytes),
-		Key:    key,
+		Params: encryptedParams,
+		Key:    saltedKey,
 		Crypto: fmt.Sprintf("%d", salt),
 	})
 	if err != nil {

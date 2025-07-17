@@ -35,8 +35,8 @@ const (
 var HTML string
 
 type Scheduler struct {
-	workers        sync.Map // map[string]*Worker
-	tasks          sync.Map // map[string]*Task
+	workers        sync.Map                  // map[string]*Worker
+	tasks          sync.Map                  // map[string]*Task
 	encryptedTasks map[string]*EncryptedTask // 加密任务存储
 	mu             sync.RWMutex
 	upgrader       websocket.Upgrader
@@ -220,7 +220,7 @@ func (s *Scheduler) processTaskResult(msg struct {
 }) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	
+
 	// 处理普通任务结果
 	if value, exists := s.tasks.Load(msg.TaskID); exists {
 		task := value.(*Task)
@@ -236,7 +236,7 @@ func (s *Scheduler) processTaskResult(msg struct {
 		}
 		return
 	}
-	
+
 	// 处理加密任务结果
 	if encryptedTask, exists := s.encryptedTasks[msg.TaskID]; exists {
 		if msg.Error != "" {
