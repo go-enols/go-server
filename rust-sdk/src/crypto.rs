@@ -4,7 +4,7 @@
 //! compatible with the Go implementation.
 
 use aes_gcm::{Aes256Gcm, Key, Nonce, KeyInit};
-use aes_gcm::aead::{Aead, generic_array::GenericArray};
+use aes_gcm::aead::Aead;
 use base64::{Engine as _, engine::general_purpose};
 use sha2::{Sha256, Digest};
 use serde_json::Value;

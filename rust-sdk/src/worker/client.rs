@@ -7,12 +7,12 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::{mpsc, RwLock};
-use tokio::time::{interval, sleep, timeout};
+use tokio::time::{interval, sleep};
 use tokio_tungstenite::{connect_async, tungstenite::Message};
 use url::Url;
 use crate::crypto::{encrypt_data, decrypt_data, unsalt_key};
 use crate::error::{Result, SdkError};
-use super::{TASK_STATUS_ERROR};
+
 
 /// Worker configuration
 #[derive(Debug, Clone)]

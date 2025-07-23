@@ -218,7 +218,7 @@ impl RetryClient {
         &self,
         method: impl Into<String> + Clone,
         params: Value,
-        timeout_duration: Duration,
+        _timeout_duration: Duration,
     ) -> Result<ResultResponse> {
         // Submit task with retry
         let exec_response = self.execute_with_retry(method, params).await?;
@@ -277,7 +277,7 @@ impl RetryClient {
         key: &str,
         salt: i32,
         params: Value,
-        timeout_duration: Duration,
+        _timeout_duration: Duration,
     ) -> Result<ResultResponse> {
         // Submit encrypted task with retry
         let exec_response = self.execute_encrypted_with_retry(method, key, salt, params).await?;

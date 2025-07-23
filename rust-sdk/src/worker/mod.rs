@@ -1,9 +1,9 @@
 //! Worker functionality for creating and managing distributed task workers
 
-mod worker;
+mod client;
 mod call;
 
-pub use worker::{Worker, Config, Method};
+pub use client::{Worker, Config, Method};
 pub use call::call;
 
 /// Task status constants

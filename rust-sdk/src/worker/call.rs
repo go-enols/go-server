@@ -86,6 +86,7 @@ pub async fn call(scheduler_url: &str, method: &str, params: Value) -> Result<Va
 /// # Ok(())
 /// # }
 /// ```
+#[allow(dead_code)]
 pub async fn call_encrypted(
     scheduler_url: &str,
     method: &str,

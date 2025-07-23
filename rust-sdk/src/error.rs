@@ -14,7 +14,7 @@ pub enum SdkError {
 
     /// WebSocket connection errors
     #[error("WebSocket error: {0}")]
-    WebSocket(#[from] tokio_tungstenite::tungstenite::Error),
+    WebSocket(Box<tokio_tungstenite::tungstenite::Error>),
 
     /// JSON serialization/deserialization errors
     #[error("JSON error: {0}")]
@@ -74,5 +74,11 @@ impl From<aes_gcm::Error> for SdkError {
 impl From<base64::DecodeError> for SdkError {
     fn from(e: base64::DecodeError) -> Self {
         SdkError::Crypto(format!("Base64 decode error: {}", e))
+    }
+}
+
+impl From<tokio_tungstenite::tungstenite::Error> for SdkError {
+    fn from(e: tokio_tungstenite::tungstenite::Error) -> Self {
+        SdkError::WebSocket(Box::new(e))
     }
 }

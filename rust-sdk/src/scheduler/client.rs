@@ -261,7 +261,7 @@ impl Client {
         &self,
         task_id: &str,
         key: &str,
-        salt: i32,
+        _salt: i32,
     ) -> Result<ResultResponse> {
         loop {
             let url = format!("{}/api/encrypted/result/{}", self.base_url, task_id);
