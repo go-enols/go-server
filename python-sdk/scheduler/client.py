@@ -53,7 +53,7 @@ class SchedulerClient:
             Base64 encoded encrypted data
         """
         # Serialize data
-        data_bytes = json.dumps(data).encode('utf-8')
+        data_bytes = json.dumps(data).encode("utf-8")
 
         # Use SHA-256 hash of key
         key_hash = hashlib.sha256(key.encode()).digest()
@@ -67,7 +67,7 @@ class SchedulerClient:
         ciphertext = aesgcm.encrypt(iv, data_bytes, None)
 
         # Return Base64 encoded result
-        return base64.b64encode(ciphertext).decode('utf-8')
+        return base64.b64encode(ciphertext).decode("utf-8")
 
     def _salt_key(self, key: str, salt: int) -> str:
         """Encrypt key using salt as AES key
@@ -88,12 +88,12 @@ class SchedulerClient:
         iv = iv_hash[:12]
 
         # Encrypt key using AES-GCM
-        key_bytes = key.encode('utf-8')
+        key_bytes = key.encode("utf-8")
         aesgcm = AESGCM(salt_hash)
         ciphertext = aesgcm.encrypt(iv, key_bytes, None)
 
         # Return Base64 encoded result
-        return base64.b64encode(ciphertext).decode('utf-8')
+        return base64.b64encode(ciphertext).decode("utf-8")
 
     def _decrypt_data(self, encrypted_data: str, key: str) -> Any:
         """Decrypt data using AES-GCM with deterministic IV
@@ -120,7 +120,7 @@ class SchedulerClient:
         plaintext = aesgcm.decrypt(iv, ciphertext, None)
 
         # Parse JSON data
-        return json.loads(plaintext.decode('utf-8'))
+        return json.loads(plaintext.decode("utf-8"))
 
     def execute(self, method: str, params: Any) -> ResultResponse:
         """Execute a task
@@ -221,7 +221,7 @@ class SchedulerClient:
             "method": method,
             "params": encrypted_params,
             "key": salted_key,
-            "crypto": str(salt)
+            "crypto": str(salt),
         }
 
         try:
@@ -286,9 +286,7 @@ class SchedulerClient:
 
         raise TimeoutError("Timeout waiting for task completion")
 
-    def get_result_encrypted(
-        self, task_id: str, key: str, salt: int
-    ) -> ResultResponse:
+    def get_result_encrypted(self, task_id: str, key: str, salt: int) -> ResultResponse:
         """Get encrypted task result with polling and decryption
 
         Args:
@@ -324,9 +322,7 @@ class SchedulerClient:
             elif result_response.status == "done" and result_response.result:
                 # Decrypt result data using original key (not salted key)
                 try:
-                    decrypted_result = self._decrypt_data(
-                        result_response.result, key
-                    )
+                    decrypted_result = self._decrypt_data(result_response.result, key)
                     result_response.result = decrypted_result
                 except Exception as e:
                     raise ValueError(f"Failed to decrypt result: {e}")

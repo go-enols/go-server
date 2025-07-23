@@ -28,9 +28,7 @@ def main():
         with SchedulerClient(scheduler_url) as client:
             # Synchronous execution
             print("Executing 'add' method synchronously...")
-            result = client.execute_sync(
-                "add", {"a": 10, "b": 20}, timeout=30.0
-            )
+            result = client.execute_sync("add", {"a": 10, "b": 20}, timeout=30.0)
             print(f"Result: {result.result}")
             print(f"Status: {result.status}")
             print()
@@ -54,13 +52,9 @@ def main():
     print("-" * 40)
 
     try:
-        with RetryClient(
-            scheduler_url, max_retries=3, retry_delay=1.0
-        ) as retry_client:
+        with RetryClient(scheduler_url, max_retries=3, retry_delay=1.0) as retry_client:
             print("Executing with retry client...")
-            result = retry_client.execute_with_retry(
-                "add", {"a": 100, "b": 200}
-            )
+            result = retry_client.execute_with_retry("add", {"a": 100, "b": 200})
             print(f"Task ID: {result.task_id}")
 
             # Get final result
@@ -125,9 +119,7 @@ def main():
         with SchedulerClient(scheduler_url) as client:
             # Try to call a non-existent method
             print("Calling non-existent method...")
-            result = client.execute_sync(
-                "nonexistent_method", {}, timeout=5.0
-            )
+            result = client.execute_sync("nonexistent_method", {}, timeout=5.0)
             print(f"Unexpected success: {result.result}")
 
     except Exception as e:

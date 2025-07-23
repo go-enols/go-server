@@ -326,7 +326,7 @@ class Worker:
                     aesgcm = AESGCM(decoded_key)
                     nonce = base64.b64decode(crypto_info.get("nonce", ""))
                     decrypted_data = aesgcm.decrypt(nonce, decoded_params, None)
-                    params = json.loads(decrypted_data.decode('utf-8'))
+                    params = json.loads(decrypted_data.decode("utf-8"))
                 else:
                     raise ValueError(
                         f"Unsupported encryption algorithm: "
@@ -351,11 +351,11 @@ class Worker:
                         aesgcm = AESGCM(decoded_key)
                         nonce = base64.b64decode(crypto_info.get("nonce", ""))
                         encrypted_result = aesgcm.encrypt(
-                            nonce, result_json.encode('utf-8'), None
+                            nonce, result_json.encode("utf-8"), None
                         )
-                        encoded_result = base64.b64encode(
-                            encrypted_result
-                        ).decode('utf-8')
+                        encoded_result = base64.b64encode(encrypted_result).decode(
+                            "utf-8"
+                        )
                     else:
                         raise ValueError(
                             f"Unsupported encryption algorithm: "

@@ -278,7 +278,7 @@ def main():
         process_text,
         "Process text data",
         'Parameters: {"text": string, "operation": string '
-        '(analyze|uppercase|lowercase|reverse)}',
+        "(analyze|uppercase|lowercase|reverse)}",
         "Returns: object with processed text or analysis results",
     )
 

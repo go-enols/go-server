@@ -74,9 +74,7 @@ class RetryClient:
 
         for attempt in range(self.max_retries):
             try:
-                return self.client.execute_encrypted(
-                    method, key, salt, params
-                )
+                return self.client.execute_encrypted(method, key, salt, params)
             except Exception as e:
                 last_error = e
                 if attempt < self.max_retries - 1:  # Don't sleep on last attempt

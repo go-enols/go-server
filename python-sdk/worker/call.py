@@ -138,8 +138,7 @@ def call_encrypted(
             time.sleep(0.1)
 
         raise TimeoutError(
-            f"Encrypted task {task_id} did not complete within "
-            f"{timeout} seconds"
+            f"Encrypted task {task_id} did not complete within " f"{timeout} seconds"
         )
 
 
