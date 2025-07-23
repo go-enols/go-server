@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Example worker usage for go-server Python SDK"""
 
-import json
 import logging
 import os
 import random
@@ -269,7 +268,8 @@ def main():
         "random",
         random_number,
         "Generate random numbers",
-        'Parameters: {"min": integer, "max": integer, "count": integer (optional, max 1000)}',
+        'Parameters: {"min": integer, "max": integer, '
+        '"count": integer (optional, max 1000)}',
         "Returns: object with generated numbers and statistics",
     )
 
@@ -277,7 +277,8 @@ def main():
         "text",
         process_text,
         "Process text data",
-        'Parameters: {"text": string, "operation": string (analyze|uppercase|lowercase|reverse)}',
+        'Parameters: {"text": string, "operation": string '
+        '(analyze|uppercase|lowercase|reverse)}',
         "Returns: object with processed text or analysis results",
     )
 

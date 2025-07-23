@@ -1,6 +1,7 @@
 """Python SDK for go-server
 
-This package provides Python client and worker libraries for interacting with the go-server
+This package provides Python client and worker libraries for interacting with the
+go-server
 distributed task scheduling system.
 
 Modules:

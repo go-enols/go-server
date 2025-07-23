@@ -1,8 +1,8 @@
 """Simple call function for worker SDK"""
 
-import json
 import os
 import sys
+import time
 from typing import Any, Optional, Type, TypeVar
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -38,11 +38,15 @@ def call(
         result = call("http://localhost:8080", "add", {"a": 1, "b": 2})
 
         # Call with type hint
-        result: int = call("http://localhost:8080", "add", {"a": 1, "b": 2}, int)
+        result: int = call(
+            "http://localhost:8080", "add", {"a": 1, "b": 2}, int
+        )
 
         # Call with complex return type
         from typing import Dict
-        result: Dict[str, Any] = call("http://localhost:8080", "get_info", {}, dict)
+        result: Dict[str, Any] = call(
+            "http://localhost:8080", "get_info", {}, dict
+        )
     """
     with SchedulerClient(host) as client:
         # Execute the task synchronously
@@ -70,7 +74,9 @@ def call_async(host: str, method: str, params: Any) -> str:
         Exception: If the call submission fails
 
     Example:
-        task_id = call_async("http://localhost:8080", "long_running_task", {"data": "..."})
+        task_id = call_async(
+            "http://localhost:8080", "long_running_task", {"data": "..."}
+        )
         # Later, get the result:
         client = SchedulerClient("http://localhost:8080")
         result = client.get_result(task_id)
@@ -108,20 +114,19 @@ def call_encrypted(
 
     Example:
         result = call_encrypted(
-            "http://localhost:8080", 
-            "secure_add", 
-            "my_secret_key", 
+            "http://localhost:8080",
+            "secure_add",
+            "my_secret_key",
             12345,
-            {"a": 1, "b": 2}
+            {"a": 1, "b": 2},
         )
     """
     with SchedulerClient(host) as client:
         # Execute the encrypted task
         response = client.execute_encrypted(method, key, salt, params)
         task_id = response.task_id
-        
+
         # Poll for result with timeout
-        import time
         start_time = time.time()
         while time.time() - start_time < timeout:
             result = client.get_result(task_id)
@@ -129,13 +134,18 @@ def call_encrypted(
                 return result.result
             elif result.status == "error":
                 raise Exception(str(result.result))
-            
+
             time.sleep(0.1)
-        
-        raise TimeoutError(f"Encrypted task {task_id} did not complete within {timeout} seconds")
+
+        raise TimeoutError(
+            f"Encrypted task {task_id} did not complete within "
+            f"{timeout} seconds"
+        )
 
 
-def call_encrypted_async(host: str, method: str, key: str, salt: int, params: Any) -> str:
+def call_encrypted_async(
+    host: str, method: str, key: str, salt: int, params: Any
+) -> str:
     """Call a remote method asynchronously with encryption and return task ID
 
     Args:
@@ -153,11 +163,11 @@ def call_encrypted_async(host: str, method: str, key: str, salt: int, params: An
 
     Example:
         task_id = call_encrypted_async(
-            "http://localhost:8080", 
-            "secure_process", 
+            "http://localhost:8080",
+            "secure_process",
             "my_secret_key",
             12345,
-            {"data": "..."}
+            {"data": "..."},
         )
     """
     with SchedulerClient(host) as client:
@@ -182,7 +192,9 @@ def get_result(
         Exception: If getting the result fails
 
     Example:
-        task_id = call_async("http://localhost:8080", "process_data", {"input": "..."})
+        task_id = call_async(
+            "http://localhost:8080", "process_data", {"input": "..."}
+        )
         result = get_result("http://localhost:8080", task_id, dict)
     """
     with SchedulerClient(host) as client:

@@ -5,10 +5,9 @@ import hashlib
 import json
 import time
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from typing import Any
 
 import requests
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
 
@@ -45,81 +44,81 @@ class SchedulerClient:
 
     def _encrypt_data(self, data: Any, key: str) -> str:
         """Encrypt data using AES-GCM with deterministic IV
-        
+
         Args:
             data: Data to encrypt
             key: Encryption key
-            
+
         Returns:
             Base64 encoded encrypted data
         """
         # Serialize data
         data_bytes = json.dumps(data).encode('utf-8')
-        
+
         # Use SHA-256 hash of key
         key_hash = hashlib.sha256(key.encode()).digest()
-        
+
         # Generate deterministic IV from key (first 12 bytes)
         iv_hash = hashlib.sha256(key.encode()).digest()
         iv = iv_hash[:12]
-        
+
         # Encrypt using AES-GCM
         aesgcm = AESGCM(key_hash)
         ciphertext = aesgcm.encrypt(iv, data_bytes, None)
-        
+
         # Return Base64 encoded result
         return base64.b64encode(ciphertext).decode('utf-8')
-    
+
     def _salt_key(self, key: str, salt: int) -> str:
         """Encrypt key using salt as AES key
-        
+
         Args:
             key: Original key
             salt: Salt value
-            
+
         Returns:
             Base64 encoded encrypted key
         """
         # Use salt to generate SHA-256 hash as AES key
         salt_str = str(salt)
         salt_hash = hashlib.sha256(salt_str.encode()).digest()
-        
+
         # Generate deterministic IV from salt (first 12 bytes)
         iv_hash = hashlib.sha256(salt_str.encode()).digest()
         iv = iv_hash[:12]
-        
+
         # Encrypt key using AES-GCM
         key_bytes = key.encode('utf-8')
         aesgcm = AESGCM(salt_hash)
         ciphertext = aesgcm.encrypt(iv, key_bytes, None)
-        
+
         # Return Base64 encoded result
         return base64.b64encode(ciphertext).decode('utf-8')
-    
+
     def _decrypt_data(self, encrypted_data: str, key: str) -> Any:
         """Decrypt data using AES-GCM with deterministic IV
-        
+
         Args:
             encrypted_data: Base64 encoded encrypted data
             key: Decryption key
-            
+
         Returns:
             Decrypted data
         """
         # Base64 decode
         ciphertext = base64.b64decode(encrypted_data)
-        
+
         # Use SHA-256 hash of key
         key_hash = hashlib.sha256(key.encode()).digest()
-        
+
         # Generate deterministic IV from key (first 12 bytes)
         iv_hash = hashlib.sha256(key.encode()).digest()
         iv = iv_hash[:12]
-        
+
         # Decrypt using AES-GCM
         aesgcm = AESGCM(key_hash)
         plaintext = aesgcm.decrypt(iv, ciphertext, None)
-        
+
         # Parse JSON data
         return json.loads(plaintext.decode('utf-8'))
 
@@ -194,7 +193,9 @@ class SchedulerClient:
         except (KeyError, json.JSONDecodeError) as e:
             raise ValueError(f"Invalid response format: {e}")
 
-    def execute_encrypted(self, method: str, key: str, salt: int, params: Any) -> ResultResponse:
+    def execute_encrypted(
+        self, method: str, key: str, salt: int, params: Any
+    ) -> ResultResponse:
         """Execute an encrypted task
 
         Args:
@@ -212,10 +213,10 @@ class SchedulerClient:
         """
         # Encrypt parameters
         encrypted_params = self._encrypt_data(params, key)
-        
+
         # Salt the key
         salted_key = self._salt_key(key, salt)
-        
+
         request_data = {
             "method": method,
             "params": encrypted_params,
@@ -285,7 +286,9 @@ class SchedulerClient:
 
         raise TimeoutError("Timeout waiting for task completion")
 
-    def get_result_encrypted(self, task_id: str, key: str, salt: int) -> ResultResponse:
+    def get_result_encrypted(
+        self, task_id: str, key: str, salt: int
+    ) -> ResultResponse:
         """Get encrypted task result with polling and decryption
 
         Args:
@@ -302,7 +305,9 @@ class SchedulerClient:
             RuntimeError: If task execution failed
         """
         try:
-            response = self.session.get(f"{self.base_url}/api/encrypted/result/{task_id}")
+            response = self.session.get(
+                f"{self.base_url}/api/encrypted/result/{task_id}"
+            )
             response.raise_for_status()
 
             data = response.json()
@@ -319,7 +324,9 @@ class SchedulerClient:
             elif result_response.status == "done" and result_response.result:
                 # Decrypt result data using original key (not salted key)
                 try:
-                    decrypted_result = self._decrypt_data(result_response.result, key)
+                    decrypted_result = self._decrypt_data(
+                        result_response.result, key
+                    )
                     result_response.result = decrypted_result
                 except Exception as e:
                     raise ValueError(f"Failed to decrypt result: {e}")
@@ -332,7 +339,12 @@ class SchedulerClient:
             raise ValueError(f"Invalid response format: {e}")
 
     def execute_sync_encrypted(
-        self, method: str, key: str, salt: int, params: Any, timeout: float = 30.0
+        self,
+        method: str,
+        key: str,
+        salt: int,
+        params: Any,
+        timeout: float = 30.0,
     ) -> ResultResponse:
         """Execute encrypted task synchronously with polling and decryption
 
@@ -358,7 +370,9 @@ class SchedulerClient:
         start_time = time.time()
         while time.time() - start_time < timeout:
             try:
-                result_response = self.get_result_encrypted(exec_response.task_id, key, salt)
+                result_response = self.get_result_encrypted(
+                    exec_response.task_id, key, salt
+                )
 
                 if result_response.status == "done":
                     return result_response

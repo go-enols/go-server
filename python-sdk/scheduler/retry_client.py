@@ -53,7 +53,9 @@ class RetryClient:
 
         raise Exception(f"After {self.max_retries} retries: {last_error}")
 
-    def execute_encrypted_with_retry(self, method: str, key: str, salt: int, params: Any) -> ResultResponse:
+    def execute_encrypted_with_retry(
+        self, method: str, key: str, salt: int, params: Any
+    ) -> ResultResponse:
         """Execute encrypted task with automatic retry on failure
 
         Args:
@@ -72,7 +74,9 @@ class RetryClient:
 
         for attempt in range(self.max_retries):
             try:
-                return self.client.execute_encrypted(method, key, salt, params)
+                return self.client.execute_encrypted(
+                    method, key, salt, params
+                )
             except Exception as e:
                 last_error = e
                 if attempt < self.max_retries - 1:  # Don't sleep on last attempt
@@ -109,7 +113,12 @@ class RetryClient:
         raise Exception(f"After {self.max_retries} retries: {last_error}")
 
     def execute_sync_encrypted_with_retry(
-        self, method: str, key: str, salt: int, params: Any, timeout: float = 30.0
+        self,
+        method: str,
+        key: str,
+        salt: int,
+        params: Any,
+        timeout: float = 30.0,
     ) -> ResultResponse:
         """Execute encrypted task synchronously with retry logic
 
@@ -127,18 +136,23 @@ class RetryClient:
             Exception: If all retry attempts fail
         """
         last_exception = None
-        
+
         for attempt in range(self.max_retries + 1):
             try:
-                return self.client.execute_sync_encrypted(method, key, salt, params, timeout)
+                return self.client.execute_sync_encrypted(
+                    method, key, salt, params, timeout
+                )
             except Exception as e:
                 last_exception = e
                 if attempt < self.max_retries:
-                    print(f"Attempt {attempt + 1} failed: {e}. Retrying in {self.retry_delay} seconds...")
+                    print(
+                        f"Attempt {attempt + 1} failed: {e}. "
+                        f"Retrying in {self.retry_delay} seconds..."
+                    )
                     time.sleep(self.retry_delay)
                 else:
                     print(f"All {self.max_retries + 1} attempts failed.")
-        
+
         raise last_exception
 
     def get_result(self, task_id: str) -> ResultResponse:
