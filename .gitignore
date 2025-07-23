@@ -31,5 +31,3 @@ pyproject.toml
 
 target
 *.ps1
-
-package-lock.json
