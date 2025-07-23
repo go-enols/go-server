@@ -79,7 +79,7 @@
 **安装方式**:
 ```bash
 # 从PyPI 安装
-pip install go-server-sdk==1.5.6
+pip install go-server-sdk==1.5.7
 
 # 或安装最新版本
 pip install go-server-sdk

@@ -7,7 +7,7 @@ Python SDK for the go-server distributed task scheduling system. This SDK provid
 - 🚀 **Easy Integration**: Simple APIs for both clients and workers
 - 🔄 **Automatic Retry**: Built-in retry mechanisms for robust operation
 - 📡 **WebSocket Support**: Real-time communication with the scheduler
-- 🛡️ **Type Safety**: Full type hints support for better development experience
+- 🛡�?**Type Safety**: Full type hints support for better development experience
 - 📚 **Method Documentation**: Support for documenting registered methods
 - ⚖️ **Load Balancing**: Automatic task distribution across workers
 
