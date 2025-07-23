@@ -1,6 +1,6 @@
 [package]
 name = "go-server-rust-sdk"
-version = "0.1.0"
+version = "1.5.6"
 edition = "2021"
 authors = ["enols<2575169674@qq.com>"]
 description = "Rust SDK for go-server distributed task scheduler and worker system"

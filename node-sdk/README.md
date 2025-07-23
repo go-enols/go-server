@@ -175,13 +175,13 @@ Make sure to wrap calls in try-catch blocks.
 
 ## Features
 
-- âœ… HTTP client for scheduler API
-- âœ… WebSocket worker with automatic reconnection
-- âœ… Method registration and documentation
-- âœ… Automatic task result polling
-- âœ… Heartbeat/ping-pong mechanism
-- âœ… Graceful error handling
-- âœ… Configurable timeouts and retry logic
+- âœ?HTTP client for scheduler API
+- âœ?WebSocket worker with automatic reconnection
+- âœ?Method registration and documentation
+- âœ?Automatic task result polling
+- âœ?Heartbeat/ping-pong mechanism
+- âœ?Graceful error handling
+- âœ?Configurable timeouts and retry logic
 
 ## Examples
 
