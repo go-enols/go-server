@@ -3,9 +3,14 @@ name = "go-server-rust-sdk"
 version = "0.1.0"
 edition = "2021"
 authors = ["enols<2575169674@qq.com>"]
-description = "Rust SDK for go-server distributed task scheduler"
+description = "Rust SDK for go-server distributed task scheduler and worker system"
 license = "MIT"
 repository = "https://github.com/go-enols/go-server"
+homepage = "https://github.com/go-enols/go-server"
+documentation = "https://docs.rs/go-server-rust-sdk"
+keywords = ["distributed", "task", "scheduler", "worker", "async"]
+categories = ["asynchronous", "network-programming", "web-programming"]
+readme = "README.md"
 
 [dependencies]
 tokio = { version = "1.0", features = ["full"] }
