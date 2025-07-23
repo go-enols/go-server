@@ -28,3 +28,5 @@ node_modules/
 dist/
 go_server_sdk.egg-info/
 pyproject.toml
+
+target
