@@ -31,3 +31,5 @@ pyproject.toml
 
 target
 *.ps1
+*.bat
+./release.py
