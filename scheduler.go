@@ -29,6 +29,7 @@ const (
 	TaskExecutionFailedMsg = "Task execution failed"
 	WorkerTimeoutMsg       = "Worker timeout"
 	WorkerDisconnectedMsg  = "Worker disconnected"
+	ServiceUnavailableMsg  = "服务不可用"
 )
 
 //go:embed index.html
@@ -189,14 +190,38 @@ func (s *Scheduler) cleanupWorkerTasks(worker *Worker, errorMsg string) {
 	s.mu.Unlock()
 }
 
+// selectWorker 选择可用的Worker来执行指定方法
+func (s *Scheduler) selectWorker(method string) *Worker {
+	var selectedWorker *Worker
+	minCount := math.MaxInt
+
+	s.workers.Range(func(key, value interface{}) bool {
+		worker := value.(*Worker)
+		lastPingNano := atomic.LoadInt64(&worker.LastPing)
+		lastPing := time.Unix(0, lastPingNano)
+		if time.Since(lastPing) > 60*time.Second {
+			return true
+		}
+
+		for _, workerMethod := range worker.Methods {
+			if workerMethod.Name == method {
+				workerCount := atomic.LoadInt64(&worker.Count)
+				if workerCount < int64(minCount) {
+					selectedWorker = worker
+					minCount = int(workerCount)
+				}
+				break
+			}
+		}
+		return true
+	})
+
+	return selectedWorker
+}
+
 func (s *Scheduler) handleWorkerMessages(worker *Worker, conn *websocket.Conn) {
 	for {
-		var msg struct {
-			Type   string          `json:"type"`
-			TaskID string          `json:"taskId"`
-			Result json.RawMessage `json:"result"`
-			Error  string          `json:"error"`
-		}
+		var msg TaskResultMessage
 		if err := conn.ReadJSON(&msg); err != nil {
 			s.cleanupWorkerTasks(worker, WorkerDisconnectedMsg)
 			log.Printf("Worker %s disconnected: %v", worker.ID, err)
@@ -207,17 +232,12 @@ func (s *Scheduler) handleWorkerMessages(worker *Worker, conn *websocket.Conn) {
 		case "pong":
 			atomic.StoreInt64(&worker.LastPing, time.Now().UnixNano())
 		case "result":
-			s.processTaskResult(msg)
+			s.processTaskResult(&msg)
 		}
 	}
 }
 
-func (s *Scheduler) processTaskResult(msg struct {
-	Type   string          `json:"type"`
-	TaskID string          `json:"taskId"`
-	Result json.RawMessage `json:"result"`
-	Error  string          `json:"error"`
-}) {
+func (s *Scheduler) processTaskResult(msg *TaskResultMessage) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -273,33 +293,11 @@ func (s *Scheduler) handleEncryptedExecute(w http.ResponseWriter, r *http.Reques
 	s.encryptedTasks[encryptedTask.ID] = encryptedTask
 
 	// 选择可用的Worker
-	var selectedWorker *Worker
-	minCount := math.MaxInt
-
-	s.workers.Range(func(key, value interface{}) bool {
-		worker := value.(*Worker)
-		lastPingNano := atomic.LoadInt64(&worker.LastPing)
-		lastPing := time.Unix(0, lastPingNano)
-		if time.Since(lastPing) > 60*time.Second {
-			return true
-		}
-
-		for _, method := range worker.Methods {
-			if method.Name == req.Method {
-				workerCount := atomic.LoadInt64(&worker.Count)
-				if workerCount < int64(minCount) {
-					selectedWorker = worker
-					minCount = int(workerCount)
-				}
-				break
-			}
-		}
-		return true
-	})
+	selectedWorker := s.selectWorker(req.Method)
 
 	if selectedWorker == nil {
 		encryptedTask.Status = TaskStatusError
-		encryptedTask.Result = "服务不可用"
+		encryptedTask.Result = ServiceUnavailableMsg
 		s.mu.Unlock()
 	} else {
 		atomic.AddInt64(&selectedWorker.Count, 1)
@@ -363,36 +361,11 @@ func (s *Scheduler) handleExecute(w http.ResponseWriter, r *http.Request) {
 	s.tasks.Store(task.ID, task)
 
 	// 在同一个锁内完成worker选择和状态更新，避免竞态条件
-	var selectedWorker *Worker
-	minCount := math.MaxInt
-
-	// 查找可用Worker并验证其连接状态
-	s.workers.Range(func(key, value interface{}) bool {
-		worker := value.(*Worker)
-		// 使用原子操作检查worker连接是否仍然有效
-		lastPingNano := atomic.LoadInt64(&worker.LastPing)
-		lastPing := time.Unix(0, lastPingNano)
-		if time.Since(lastPing) > 60*time.Second {
-			return true // 跳过可能已断线的worker
-		}
-
-		for _, method := range worker.Methods {
-			if method.Name == req.Method {
-				// 使用原子操作读取计数
-				workerCount := atomic.LoadInt64(&worker.Count)
-				if workerCount < int64(minCount) {
-					selectedWorker = worker
-					minCount = int(workerCount)
-				}
-				break // 找到匹配方法就跳出内层循环
-			}
-		}
-		return true
-	})
+	selectedWorker := s.selectWorker(req.Method)
 
 	if selectedWorker == nil {
 		task.Status = TaskStatusError
-		task.Result = "服务不可用"
+		task.Result = ServiceUnavailableMsg
 		s.mu.Unlock()
 	} else {
 		// 使用原子操作增加计数

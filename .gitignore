@@ -30,3 +30,4 @@ go_server_sdk.egg-info/
 pyproject.toml
 
 target
+*.ps1

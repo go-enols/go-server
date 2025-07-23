@@ -17,27 +17,27 @@ type Task struct {
 	Method  string
 	Params  json.RawMessage
 	Result  any
-	Status  TaskStatus // "pending", "processing", "done", "error"
 	Worker  *Worker
 	Created time.Time
+	Status  TaskStatus // "pending", "processing", "done", "error"
 }
 
 type Worker struct {
-	ID       string
 	Conn     *websocket.Conn
 	Methods  []MethodInfo
+	ConnMu   sync.Mutex // 保护websocket连接的并发写入
 	LastPing int64      // 使用原子操作，存储Unix纳秒时间戳
 	Count    int64      // 使用原子操作
-	ConnMu   sync.Mutex // 保护websocket连接的并发写入
+	ID       string
 	IP       string     // Worker的IP地址
 	Group    string     // Worker的分组
 }
 
 type WorkerInfo struct {
-	ID       string       `json:"id"`
 	Methods  []MethodInfo `json:"methods"`
 	LastPing time.Time    `json:"lastPing"`
 	Count    int64        `json:"count"`
+	ID       string       `json:"id"`
 	IP       string       `json:"ip"`
 	Group    string       `json:"group"`
 }
@@ -57,13 +57,21 @@ type EncryptedRequest struct {
 
 // EncryptedTask 端到端加密任务结构(调度器只做中转)
 type EncryptedTask struct {
-	ID      string
-	Key     string // 用户加盐后的密钥(原封不动传递)
-	Method  string // 方法名(明文，用于路由)
-	Params  string // 加密后的参数(原封不动传递)
-	Crypto  string // 加盐数据(原封不动传递)
-	Result  any
-	Status  TaskStatus
-	Worker  *Worker
-	Created time.Time
+	Result  interface{} `json:"result"`
+	Worker  *Worker     `json:"-"`
+	Created time.Time   `json:"created"`
+	ID      string      `json:"id"`
+	Key     string      `json:"key"`
+	Method  string      `json:"method"`
+	Params  string      `json:"params"`
+	Crypto  string      `json:"crypto"`
+	Status  TaskStatus  `json:"status"`
+}
+
+// TaskResultMessage represents the message structure for task results
+type TaskResultMessage struct {
+	Type   string          `json:"type"`
+	TaskID string          `json:"taskId"`
+	Error  string          `json:"error"`
+	Result json.RawMessage `json:"result"`
 }

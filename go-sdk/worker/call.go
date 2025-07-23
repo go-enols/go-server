@@ -2,12 +2,12 @@
 package worker
 
 import (
+	"crypto/rand"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math/rand"
+	"math/big"
 	"reflect"
-	"time"
 
 	"github.com/go-enols/go-server/go-sdk/scheduler"
 )
@@ -31,7 +31,11 @@ func Call(host, method string, params, out interface{}, encryptionKey ...string)
 	// 如果提供了加密密钥，使用加密方式调用
 	if len(encryptionKey) > 0 && encryptionKey[0] != "" {
 		// 生成随机盐值
-		salt := rand.New(rand.NewSource(time.Now().UnixNano())).Intn(999999) + 100000 // 生成6位随机数
+		saltBig, err := rand.Int(rand.Reader, big.NewInt(900000))
+		if err != nil {
+			return fmt.Errorf("生成随机盐值失败: %v", err)
+		}
+		salt := int(saltBig.Int64()) + 100000 // 生成6位随机数
 		res, err := client.ExecuteEncrypted(method, encryptionKey[0], salt, params)
 		if err != nil {
 			return err
