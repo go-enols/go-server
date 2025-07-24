@@ -354,9 +354,10 @@ func (s *Scheduler) handleEncryptedExecute(w http.ResponseWriter, r *http.Reques
 	s.mu.RLock()
 	status := encryptedTask.Status
 	s.mu.RUnlock()
-	if err := json.NewEncoder(w).Encode(map[string]string{
+	if err := json.NewEncoder(w).Encode(map[string]any{
 		"taskId": encryptedTask.ID,
 		"status": string(status),
+		"result": encryptedTask.Result,
 	}); err != nil {
 		log.Printf("Failed to encode response: %v", err)
 	}
@@ -422,9 +423,10 @@ func (s *Scheduler) handleExecute(w http.ResponseWriter, r *http.Request) {
 	s.mu.RLock()
 	status := task.Status
 	s.mu.RUnlock()
-	if err := json.NewEncoder(w).Encode(map[string]string{
+	if err := json.NewEncoder(w).Encode(map[string]any{
 		"taskId": task.ID,
 		"status": string(status),
+		"result": task.Result,
 	}); err != nil {
 		log.Printf("Failed to encode response: %v", err)
 	}
@@ -653,8 +655,10 @@ func (s *Scheduler) Stop() {
 	close(s.stopCleanup)
 }
 
-func (s *Scheduler) Start(addr, key string) {
-	http.HandleFunc("/", s.handleUI)
+func (s *Scheduler) Start(addr, key string, isUi ...bool) {
+	if len(isUi) != 0 && isUi[0] {
+		http.HandleFunc("/", s.handleUI)
+	}
 	http.HandleFunc("/api/worker/connect/"+key, s.handleWorkerConnection)
 	http.HandleFunc("/api/execute", s.handleExecute)
 	http.HandleFunc("/api/encrypted/execute", s.handleEncryptedExecute)
