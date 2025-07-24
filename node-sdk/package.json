@@ -1,6 +1,6 @@
 {
   "name": "go-server-sdk",
-  "version": "1.5.8",
+  "version": "1.6.0",
   "description": "Node.js SDK for go-server distributed task scheduler and worker system",
   "main": "index.js",
   "types": "types/index.d.ts",

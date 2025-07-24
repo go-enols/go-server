@@ -5,6 +5,13 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)，
 并且本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [v1.6.0] - 2024-12-19
+
+### 🔧 修复
+- 版本更新到 v1.6.0
+- 同步所有 SDK 版本号
+- 持续优化项目结构和功能
+
 ## [v1.4.5] - 2024-12-19
 
 ### 🔧 修复

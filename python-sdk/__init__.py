@@ -35,7 +35,7 @@ Example usage:
     result = call("http://localhost:8080", "add", {"a": 1, "b": 2})
 """
 
-__version__ = "1.5.6"
+__version__ = "1.6.0"
 __author__ = "go-server team"
 __description__ = "Python SDK for go-server distributed task scheduling system"
 
