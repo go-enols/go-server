@@ -13,13 +13,14 @@ import (
 type TaskStatus string
 
 type Task struct {
-	ID      string
-	Method  string
-	Params  json.RawMessage
-	Result  any
-	Worker  *Worker
-	Created time.Time
-	Status  TaskStatus // "pending", "processing", "done", "error"
+	ID        string
+	Method    string
+	Params    json.RawMessage
+	Result    any
+	Worker    *Worker
+	Created   time.Time
+	Completed time.Time // 任务完成时间
+	Status    TaskStatus // "pending", "processing", "done", "error"
 }
 
 type Worker struct {
@@ -57,15 +58,16 @@ type EncryptedRequest struct {
 
 // EncryptedTask 端到端加密任务结构(调度器只做中转)
 type EncryptedTask struct {
-	Result  interface{} `json:"result"`
-	Worker  *Worker     `json:"-"`
-	Created time.Time   `json:"created"`
-	ID      string      `json:"id"`
-	Key     string      `json:"key"`
-	Method  string      `json:"method"`
-	Params  string      `json:"params"`
-	Crypto  string      `json:"crypto"`
-	Status  TaskStatus  `json:"status"`
+	Result    interface{} `json:"result"`
+	Worker    *Worker     `json:"-"`
+	Created   time.Time   `json:"created"`
+	Completed time.Time   `json:"completed"` // 任务完成时间
+	ID        string      `json:"id"`
+	Key       string      `json:"key"`
+	Method    string      `json:"method"`
+	Params    string      `json:"params"`
+	Crypto    string      `json:"crypto"`
+	Status    TaskStatus  `json:"status"`
 }
 
 // TaskResultMessage represents the message structure for task results

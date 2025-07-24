@@ -42,14 +42,21 @@ type Scheduler struct {
 	mu             sync.RWMutex
 	upgrader       websocket.Upgrader
 	taskQueue      chan *Task
+	cleanupTicker  *time.Ticker // 定期清理定时器
+	stopCleanup    chan bool    // 停止清理信号
 }
 
 func NewScheduler() *Scheduler {
-	return &Scheduler{
+	s := &Scheduler{
 		encryptedTasks: make(map[string]*EncryptedTask),
 		upgrader:       websocket.Upgrader{CheckOrigin: func(r *http.Request) bool { return true }},
 		taskQueue:      make(chan *Task, 100),
+		cleanupTicker:  time.NewTicker(1 * time.Minute), // 每分钟检查一次
+		stopCleanup:    make(chan bool),
 	}
+	// 启动任务清理协程
+	go s.startTaskCleanup()
+	return s
 }
 
 func (s *Scheduler) handleWorkerConnection(w http.ResponseWriter, r *http.Request) {
@@ -180,12 +187,26 @@ func (s *Scheduler) cleanupWorkerTasks(worker *Worker, errorMsg string) {
 		if task.Worker != nil && task.Worker.ID == worker.ID && task.Status == TaskStatusProcessing {
 			task.Status = TaskStatusError
 			task.Result = errorMsg
+			task.Completed = time.Now() // 记录任务完成时间
 			atomic.AddInt64(&task.Worker.Count, -1)
 			task.Worker = nil
 			log.Printf("Task %s failed due to worker %s issue", task.ID, worker.ID)
 		}
 		return true
 	})
+
+	// 清理加密任务
+	for taskID, encryptedTask := range s.encryptedTasks {
+		if encryptedTask.Worker != nil && encryptedTask.Worker.ID == worker.ID && encryptedTask.Status == TaskStatusProcessing {
+			encryptedTask.Status = TaskStatusError
+			encryptedTask.Result = errorMsg
+			encryptedTask.Completed = time.Now() // 记录任务完成时间
+			atomic.AddInt64(&encryptedTask.Worker.Count, -1)
+			encryptedTask.Worker = nil
+			log.Printf("Encrypted task %s failed due to worker %s issue", taskID, worker.ID)
+		}
+	}
+
 	s.workers.Delete(worker.ID)
 	s.mu.Unlock()
 }
@@ -251,6 +272,7 @@ func (s *Scheduler) processTaskResult(msg *TaskResultMessage) {
 			task.Status = TaskStatusDone
 			task.Result = msg.Result
 		}
+		task.Completed = time.Now() // 记录任务完成时间
 		if task.Worker != nil {
 			atomic.AddInt64(&task.Worker.Count, -1)
 		}
@@ -266,6 +288,7 @@ func (s *Scheduler) processTaskResult(msg *TaskResultMessage) {
 			encryptedTask.Status = TaskStatusDone
 			encryptedTask.Result = msg.Result
 		}
+		encryptedTask.Completed = time.Now() // 记录任务完成时间
 		if encryptedTask.Worker != nil {
 			atomic.AddInt64(&encryptedTask.Worker.Count, -1)
 		}
@@ -410,20 +433,29 @@ func (s *Scheduler) handleExecute(w http.ResponseWriter, r *http.Request) {
 func (s *Scheduler) handleEncryptedResult(w http.ResponseWriter, r *http.Request) {
 	taskID := r.URL.Path[len("/api/encrypted/result/"):]
 
-	s.mu.RLock()
+	s.mu.Lock()
 	encryptedTask, exists := s.encryptedTasks[taskID]
-	s.mu.RUnlock()
 	if !exists {
+		s.mu.Unlock()
 		http.Error(w, "encrypted task not found", http.StatusNotFound)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(map[string]interface{}{
+	// 复制任务信息用于响应
+	response := map[string]interface{}{
 		"taskId": encryptedTask.ID,
 		"status": encryptedTask.Status,
 		"result": encryptedTask.Result,
-	}); err != nil {
+	}
+
+	// 如果任务已完成，获取结果后立即删除
+	if encryptedTask.Status == TaskStatusDone || encryptedTask.Status == TaskStatusError {
+		delete(s.encryptedTasks, taskID)
+	}
+	s.mu.Unlock()
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(response); err != nil {
 		log.Printf("Failed to encode response: %v", err)
 	}
 }
@@ -438,12 +470,20 @@ func (s *Scheduler) handleResult(w http.ResponseWriter, r *http.Request) {
 	}
 	task := value.(*Task)
 
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(map[string]interface{}{
+	// 复制任务信息用于响应
+	response := map[string]interface{}{
 		"taskId": task.ID,
 		"status": task.Status,
 		"result": task.Result,
-	}); err != nil {
+	}
+
+	// 如果任务已完成，获取结果后立即删除
+	if task.Status == TaskStatusDone || task.Status == TaskStatusError {
+		s.tasks.Delete(taskID)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(response); err != nil {
 		log.Printf("Failed to encode response: %v", err)
 	}
 }
@@ -476,16 +516,49 @@ func (s *Scheduler) handleStatus(w http.ResponseWriter, r *http.Request) {
 		return true
 	})
 
+	// 统计任务信息
 	totalTasks := 0
+	activeTasks := 0
+	completedTasks := 0
 	s.tasks.Range(func(key, value interface{}) bool {
+		task := value.(*Task)
 		totalTasks++
+		if task.Status == TaskStatusPending || task.Status == TaskStatusProcessing {
+			activeTasks++
+		} else {
+			completedTasks++
+		}
 		return true
 	})
 
+	// 统计加密任务信息
+	s.mu.RLock()
+	totalEncryptedTasks := len(s.encryptedTasks)
+	activeEncryptedTasks := 0
+	completedEncryptedTasks := 0
+	for _, encryptedTask := range s.encryptedTasks {
+		if encryptedTask.Status == TaskStatusPending || encryptedTask.Status == TaskStatusProcessing {
+			activeEncryptedTasks++
+		} else {
+			completedEncryptedTasks++
+		}
+	}
+	s.mu.RUnlock()
+
 	response := map[string]interface{}{
-		"workers":      workers,
-		"totalMethods": totalMethods,
-		"totalTasks":   totalTasks,
+		"workers":                 workers,
+		"totalMethods":            totalMethods,
+		"totalTasks":              totalTasks,
+		"activeTasks":             activeTasks,
+		"completedTasks":          completedTasks,
+		"totalEncryptedTasks":     totalEncryptedTasks,
+		"activeEncryptedTasks":    activeEncryptedTasks,
+		"completedEncryptedTasks": completedEncryptedTasks,
+		"memoryInfo": map[string]interface{}{
+			"description":      "Tasks are automatically cleaned up after completion: immediately when result is retrieved, or after 5 minutes",
+			"cleanupInterval":  "1 minute",
+			"autoCleanupDelay": "5 minutes after completion",
+		},
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -520,6 +593,64 @@ func (s *Scheduler) getClientIP(r *http.Request) string {
 		return r.RemoteAddr
 	}
 	return host
+}
+
+// startTaskCleanup 启动任务清理协程
+func (s *Scheduler) startTaskCleanup() {
+	for {
+		select {
+		case <-s.cleanupTicker.C:
+			s.cleanupExpiredTasks()
+		case <-s.stopCleanup:
+			s.cleanupTicker.Stop()
+			return
+		}
+	}
+}
+
+// cleanupExpiredTasks 清理过期任务（完成后5分钟）
+func (s *Scheduler) cleanupExpiredTasks() {
+	now := time.Now()
+	expireTime := 5 * time.Minute
+	cleanedCount := 0
+	encryptedCleanedCount := 0
+
+	// 清理普通任务
+	s.tasks.Range(func(key, value interface{}) bool {
+		task := value.(*Task)
+		// 检查任务是否已完成且超过5分钟
+		if (task.Status == TaskStatusDone || task.Status == TaskStatusError) &&
+			!task.Completed.IsZero() &&
+			now.Sub(task.Completed) > expireTime {
+			s.tasks.Delete(key)
+			cleanedCount++
+			log.Printf("Task %s cleaned up after 5 minutes", task.ID)
+		}
+		return true
+	})
+
+	// 清理加密任务
+	s.mu.Lock()
+	for taskID, encryptedTask := range s.encryptedTasks {
+		// 检查任务是否已完成且超过5分钟
+		if (encryptedTask.Status == TaskStatusDone || encryptedTask.Status == TaskStatusError) &&
+			!encryptedTask.Completed.IsZero() &&
+			now.Sub(encryptedTask.Completed) > expireTime {
+			delete(s.encryptedTasks, taskID)
+			encryptedCleanedCount++
+			log.Printf("Encrypted task %s cleaned up after 5 minutes", taskID)
+		}
+	}
+	s.mu.Unlock()
+
+	if cleanedCount > 0 || encryptedCleanedCount > 0 {
+		log.Printf("Cleanup completed: %d tasks, %d encrypted tasks removed", cleanedCount, encryptedCleanedCount)
+	}
+}
+
+// Stop 停止调度器并清理资源
+func (s *Scheduler) Stop() {
+	close(s.stopCleanup)
 }
 
 func (s *Scheduler) Start(addr, key string) {
